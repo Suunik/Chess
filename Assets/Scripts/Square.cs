@@ -19,16 +19,16 @@ public class Square : MonoBehaviour
         SquareColor.a = 0;
         spriterenderer.color = SquareColor;
 
-        // 0.3 on pool ruudu pikkusest
+        // 0.5 on pool ruudu pikkusest
         // Vaja selleks, et aru saada kas hiir on ruudu peal
         rect = new Rect(
-               new Vector2(-0.3f + transform.position.x, -0.3f + transform.position.y),
-               new Vector2(0.61f, 0.61f));
+               new Vector2(-0.5f + transform.position.x, -0.5f + transform.position.y),
+               new Vector2(1.01f, 1.01f));
     }
 
     private void Update()
     {
-        PaintTheSquare();
+       
     }
     public void PaintTheSquare()
     {
@@ -49,8 +49,8 @@ public class Square : MonoBehaviour
                     {
                         SquareColor.a = 0.39f;
                         spriterenderer.color = SquareColor;
+                        Debug.Log(transform.position);
                     }
-                    Debug.Log("Square: " + _row + _column);
                 }
             }
         }
@@ -63,5 +63,10 @@ public class Square : MonoBehaviour
     public void SetSquareName()
     {
         gameObject.name = "Square: " + _row + _column;
+    }
+    
+    public string returnSquare()
+    {
+        return "" + _row + _column;
     }
 }
