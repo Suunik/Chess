@@ -10,7 +10,7 @@ public class Square : MonoBehaviour
     private SpriteRenderer spriterenderer;
     private Color SquareColor;
 
-    Rect rect;
+    public Rect rect;
 
     private void Awake()
     {
@@ -49,7 +49,6 @@ public class Square : MonoBehaviour
                     {
                         SquareColor.a = 0.39f;
                         spriterenderer.color = SquareColor;
-                        Debug.Log(transform.position);
                     }
                 }
             }
@@ -65,8 +64,14 @@ public class Square : MonoBehaviour
         gameObject.name = "Square: " + _row + _column;
     }
     
-    public string returnSquare()
+  public string ReturnSquare()
     {
         return "" + _row + _column;
+    }
+
+    public void HighlightSquare()
+    {
+        SquareColor.a = 0.39f;
+        spriterenderer.color = SquareColor;
     }
 }

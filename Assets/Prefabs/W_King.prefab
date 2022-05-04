@@ -10,8 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1110088855858940478}
   - component: {fileID: 4103304050792273249}
-  - component: {fileID: -6282484730337563575}
-  - component: {fileID: -5694509601502238192}
+  - component: {fileID: -2518495475470759048}
   m_Layer: 6
   m_Name: W_King
   m_TagString: Untagged
@@ -84,7 +83,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &-6282484730337563575
+--- !u!114 &-2518495475470759048
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -96,15 +95,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbcb64e744cd093469f011289d9d7a21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &-5694509601502238192
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5874788923316898567}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 346d479e351b28b4bb1af9954cba0858, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  PieceWasMoved: 0
+  Active: 1
+  currentSquare: {fileID: 0}
