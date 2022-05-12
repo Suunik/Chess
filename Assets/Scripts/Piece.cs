@@ -57,18 +57,10 @@ public class Piece : MonoBehaviour
         {
             Vector3 mousepos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
-            //Selleks, et nupp ruudul 6igesse kohta snapiks   
-            mousepos = new Vector3(
-                Mathf.Round(mousepos.x - 0.5f) + 0.5f,
-                Mathf.Round(mousepos.y - 0.5f) + 0.5f,
-                -2);
+            //position of the mouse 
+            mousepos = new Vector3(mousepos.x, mousepos.y, -2);
 
-            //Selleks, et nupp ei saaks laua piiretest v2lja minna
-            transform.position = new Vector3(
-             Mathf.Clamp(mousepos.x, -3.5f, +3.5f),
-             Mathf.Clamp(mousepos.y, -3.5f, +3.5f),
-             mousepos.z);
-
+            transform.position = mousepos;
         }
 
         if (Input.GetMouseButtonUp(0))
@@ -76,31 +68,43 @@ public class Piece : MonoBehaviour
             //salvestab hiire lahti laskmisel nupule uue ruudu
             if (PieceHeld)
             {
-                for(int i = 0; i < Board.Instance.AvailableMoves.Count; ++i)
+                if (Board.Instance.AvailableMoves.Count != 0)
                 {
-                    //Z axise tagasi muutmiseks et ta kattuks laual asuva squarega
-                    transform.position = new Vector3(transform.position.x, transform.position.y, -1);
-
-                    if (transform.position == Board.Instance.AvailableMoves[i].transform.position)
+                    for (int i = 0; i < Board.Instance.AvailableMoves.Count; ++i)
                     {
-                        CheckForEnemy = true;
-                        currentSquare = Board.Instance.AvailableMoves[i];
+                        //Z axise tagasi muutmiseks et ta kattuks laual asuva squarega
+                        transform.position = new Vector3( Mathf.Clamp(Mathf.Round(transform.position.x -0.5f) +0.5f, -3.5f, 3.5f),
+                                                          Mathf.Clamp(Mathf.Round(transform.position.y - 0.5f) +0.5f, -3.5f,3.5f),
+                                                          -1);
 
-                        Board.Instance.ClearAvailableMoves();
+                        if (transform.position == Board.Instance.AvailableMoves[i].transform.position)
+                        {
+                            CheckForEnemy = true;
+                            currentSquare = Board.Instance.AvailableMoves[i];
 
-                        Debug.Log(currentSquare.ReturnSquare());
-                        Highlight(-0.3f);
-                        break;
+                            Board.Instance.ClearAvailableMoves();
+
+                            Debug.Log(currentSquare.ReturnSquare());
+                            Highlight(-0.3f);
+                            break;
+                        }
+
+                        if (i == Board.Instance.AvailableMoves.Count - 1)
+                        {
+                            transform.position = currentSquare.transform.position;
+                            Board.Instance.ClearAvailableMoves();
+                            Highlight(-0.3f);
+                            Debug.Log("Kaka");
+                            break;
+                        }
                     }
-
-                    if (i == Board.Instance.AvailableMoves.Count -1)
-                    {
-                        transform.position = currentSquare.transform.position;
-                        Board.Instance.ClearAvailableMoves();
-                        Highlight(-0.3f);
-                        Debug.Log("Kaka");
-                        break;
-                    }
+                }
+                else
+                {
+                    transform.position = currentSquare.transform.position;
+                    Board.Instance.ClearAvailableMoves();
+                    Highlight(-0.3f);
+                    Debug.Log("Kaka");
                 }
             }
             PieceHeld = false;

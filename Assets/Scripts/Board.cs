@@ -118,6 +118,42 @@ public class Board : MonoBehaviour
 
     private void CheckAvailableMoves(Piece Pieceheld)
     {
+        //PAWN Movement
+        if (Pieceheld != null && Pieceheld.PieceNumber == 0)
+        {
+            if (Pieceheld.AvailableMovesCheck)
+            {
+                for (int x = 0; x < TileCountX; ++x)
+                {
+                    for (int y = 0; y < TileCountY; ++y)
+                    {
+                        if (Pieceheld.currentSquare == squares[x, y])
+                        {
+                            for (int z = 0; z < WhitePieces.Length; ++z)
+                            {
+                                if (Pieceheld = WhitePieces[z])
+                                {
+                                    if (IsLegalMoveWhite(x + 1, y))
+                                        AvailableMoves.Add(squares[x + 1, y]);
+                                }
+                            }
+                            for (int z = 0; z < BlackPieces.Length; ++z)
+                            {
+                                if (Pieceheld = BlackPieces[z])
+                                {
+                                    if (IsLegalMoveBlack(x - 1, y))
+                                        AvailableMoves.Add(squares[x - 1, y]);
+                                }
+                            }
+                            for (int i = 0; i < AvailableMoves.Count; ++i)
+                            {
+                                AvailableMoves[i].HighlightSquare();
+                            }
+                        }
+                    }
+                }
+            }
+        }
         //KING Movement
         if (Pieceheld != null && Pieceheld.PieceNumber == 5)
         {
