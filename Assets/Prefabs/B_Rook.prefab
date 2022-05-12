@@ -95,3 +95,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbcb64e744cd093469f011289d9d7a21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  PieceNumber: 1
+  PieceHeld: 0
+  AvailableMovesCheck: 0
+  CheckForEnemy: 0
+  PieceActive: 1
+  currentSquare: {fileID: 0}

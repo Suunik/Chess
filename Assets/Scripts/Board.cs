@@ -10,6 +10,7 @@ public class Board : MonoBehaviour
     static private int TileCountY = 8;
 
     public Square[,] squares = new Square[TileCountX, TileCountY];
+    public List<Square> AvailableMoves = new List<Square>();
 
     public Square SquarePrefab;
 
@@ -35,7 +36,7 @@ public class Board : MonoBehaviour
         CheckForBlackPieceCapture();
         CheckForWhitePieceCapture();
 
-        AvailableMoves(Pieceheld());
+        CheckAvailableMoves(Pieceheld());
     }
 
     //Spawning pieces and squares
@@ -55,17 +56,17 @@ public class Board : MonoBehaviour
 
     private void SpawnAllWhitePieces()
     {
-        // Spawns the pawns
+         //Spawns the pawns
         for (int i = 0; i < TileCountY; ++i)
         {
-            SpawnSingleWhitePiece(i, 0, 1, i);
+            SpawnSingleWhitePiece(i, 0, 4, i);
         }
 
         SpawnSingleWhitePiece(8, 1, 0, 0);
         SpawnSingleWhitePiece(9, 2, 0, 1);
         SpawnSingleWhitePiece(10, 3, 0, 2);
         SpawnSingleWhitePiece(11, 4, 0, 3);
-        SpawnSingleWhitePiece(12, 5, 3, 4);
+        SpawnSingleWhitePiece(12, 5, 0, 4);
         SpawnSingleWhitePiece(13, 3, 0, 5);
         SpawnSingleWhitePiece(14, 2, 0, 6);
         SpawnSingleWhitePiece(15, 1, 0, 7);
@@ -103,27 +104,283 @@ public class Board : MonoBehaviour
         BlackPieces[PieceNumber].currentSquare = squares[row, column];
     }
 
-    //Movement and capture
-
-    private void AvailableMoves(Piece Pieceheld)
-    {   
-        if (Pieceheld != null && Pieceheld.PieceNumber == 5)
+    public void ClearAvailableMoves()
+    {
+        for (int i = 0; i < AvailableMoves.Count; ++i)
         {
-            for(int x = 0; x < TileCountX; ++x)
-            {
-                for (int y = 0; y < TileCountY; ++y)
-                {
-                    if (Pieceheld.currentSquare.ReturnSquare() == squares[x, y].ReturnSquare())
-                    {
-                        squares[x, y].HighlightSquare();
-                        squares[x + 1, y - 1].HighlightSquare();
-                        squares[x , y - 1].HighlightSquare();
-                    }
-                }
-            }           
+            AvailableMoves[i].TransparentSquare();
         }
+
+        AvailableMoves.Clear();
     }
 
+    //Movement and capture
+
+    private void CheckAvailableMoves(Piece Pieceheld)
+    {
+        //KING Movement
+        if (Pieceheld != null && Pieceheld.PieceNumber == 5)
+        {
+            if (Pieceheld.AvailableMovesCheck)
+            {
+                for (int x = 0; x < TileCountX; ++x)
+                {
+                    for (int y = 0; y < TileCountY; ++y)
+                    {
+                        if (Pieceheld.currentSquare == squares[x, y])
+                        {
+                            if(IsLegalMoveWhite(x + 1, y) || IsLegalMoveBlack(x + 1, y))
+                                AvailableMoves.Add(squares[x + 1, y]);
+
+                            if (IsLegalMoveWhite(x + 1, y - 1) || IsLegalMoveBlack(x + 1, y - 1))
+                                AvailableMoves.Add(squares[x + 1, y - 1]);
+
+                            if (IsLegalMoveWhite(x + 1, y + 1) || IsLegalMoveBlack(x + 1, y + 1))
+                                AvailableMoves.Add(squares[x + 1, y + 1]);
+
+                            if (IsLegalMoveWhite(x, y - 1) || IsLegalMoveBlack(x, y - 1))
+                                AvailableMoves.Add(squares[x, y - 1]);
+
+                            if (IsLegalMoveWhite(x, y + 1) || IsLegalMoveBlack(x , y + 1))
+                                AvailableMoves.Add(squares[x, y + 1]);
+
+                            if (IsLegalMoveWhite(x - 1, y - 1) || IsLegalMoveBlack(x - 1, y - 1))
+                                AvailableMoves.Add(squares[x - 1, y - 1]);
+
+                            if (IsLegalMoveWhite(x - 1, y) || IsLegalMoveBlack(x - 1, y))
+                                AvailableMoves.Add(squares[x - 1, y]);
+
+                            if (IsLegalMoveWhite(x - 1, y + 1) || IsLegalMoveBlack(x - 1, y + 1))
+                                AvailableMoves.Add(squares[x - 1, y + 1]);
+
+                            for (int i = 0; i < AvailableMoves.Count; ++i)
+                            {
+                                AvailableMoves[i].HighlightSquare();
+                            }
+
+                            Pieceheld.AvailableMovesCheck = false;
+
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        //ROOK Movement
+        if(Pieceheld != null && Pieceheld.PieceNumber == 1)
+        {
+            if (Pieceheld.AvailableMovesCheck)
+            {
+                for (int x = 0; x < TileCountX; ++x)
+                {
+                    for (int y = 0; y < TileCountY; ++y)
+                    {
+                        if (Pieceheld.currentSquare == squares[x, y])
+                        {
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x + i, y) || IsLegalMoveBlack(x + i, y))
+                                    AvailableMoves.Add(squares[x + i, y]);
+                                else
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x - i, y) || IsLegalMoveBlack(x - i, y))
+                                    AvailableMoves.Add(squares[x - i, y]);
+                                else
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x, y + i) || IsLegalMoveBlack(x, y + i))
+                                    AvailableMoves.Add(squares[x, y + i]);
+                                else
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x, y - i) || IsLegalMoveBlack(x, y - i))
+                                    AvailableMoves.Add(squares[x, y - i]);
+                                else
+                                    break;
+                            }
+                            for (int i = 0; i < AvailableMoves.Count; ++i)
+                            {
+                                AvailableMoves[i].HighlightSquare();
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+        //HORSE Movement
+        if (Pieceheld != null && Pieceheld.PieceNumber == 2)
+        {
+            if (Pieceheld.AvailableMovesCheck)
+            {
+                for (int x = 0; x < TileCountX; ++x)
+                {
+                    for (int y = 0; y < TileCountY; ++y)
+                    {
+                        if (Pieceheld.currentSquare == squares[x, y])
+                        {
+                            if (IsLegalMoveWhite(x + 2, y + 1) || IsLegalMoveBlack(x + 2, y + 1))
+                                AvailableMoves.Add(squares[x + 2, y + 1]);
+                            if (IsLegalMoveWhite(x + 1, y + 2) || IsLegalMoveBlack(x + 1, y + 2))
+                                AvailableMoves.Add(squares[x + 1, y + 2]);
+                            if (IsLegalMoveWhite(x - 1, y + 2) || IsLegalMoveBlack(x - 1, y + 2))
+                                AvailableMoves.Add(squares[x - 1, y + 2]);
+                            if (IsLegalMoveWhite(x - 2, y + 1) || IsLegalMoveBlack(x - 2, y + 1))
+                                AvailableMoves.Add(squares[x - 2, y + 1]);
+                            if (IsLegalMoveWhite(x - 2, y - 1) || IsLegalMoveBlack(x - 2, y - 1))
+                                AvailableMoves.Add(squares[x - 2, y - 1]);
+                            if (IsLegalMoveWhite(x - 1, y - 2) || IsLegalMoveBlack(x - 1, y - 2))
+                                AvailableMoves.Add(squares[x - 1, y - 2]);
+                            if (IsLegalMoveWhite(x + 1, y - 2) || IsLegalMoveBlack(x + 1, y - 2))
+                                AvailableMoves.Add(squares[x + 1, y - 2]);
+                            if (IsLegalMoveWhite(x + 2, y - 1) || IsLegalMoveBlack(x + 2, y - 1))
+                                AvailableMoves.Add(squares[x + 2, y - 1]);
+
+                            for (int i = 0; i < AvailableMoves.Count; ++i)
+                            {
+                                AvailableMoves[i].HighlightSquare();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        //BISHOP Movement
+        if (Pieceheld != null && Pieceheld.PieceNumber == 3)
+        {
+            if (Pieceheld.AvailableMovesCheck)
+            {
+                for (int x = 0; x < TileCountX; ++x)
+                {
+                    for (int y = 0; y < TileCountY; ++y)
+                    {
+                        if (Pieceheld.currentSquare == squares[x, y])
+                        {
+                            for(int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x + i, y + i) || IsLegalMoveBlack(x + i, y + i))
+                                    AvailableMoves.Add(squares[x + i, y + i]);
+                                else
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+
+                                if (IsLegalMoveWhite(x + i, y - i) || IsLegalMoveBlack(x + i, y - i))
+                                    AvailableMoves.Add(squares[x + i, y - i]);
+                                else
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+
+                                if (IsLegalMoveWhite(x - i, y - i) || IsLegalMoveBlack(x - i, y - i))
+                                    AvailableMoves.Add(squares[x - i, y - i]);
+                                else
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+
+                                if (IsLegalMoveWhite(x - i, y + i) || IsLegalMoveBlack(x - i, y + i))
+                                    AvailableMoves.Add(squares[x - i, y + i]);
+                                else
+                                    break;
+                            }
+                            for (int i = 0; i < AvailableMoves.Count; ++i)
+                            {
+                                AvailableMoves[i].HighlightSquare();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        //QUEEN Movement
+        if (Pieceheld != null && Pieceheld.PieceNumber == 4)
+        {
+            if (Pieceheld.AvailableMovesCheck)
+            {
+                for (int x = 0; x < TileCountX; ++x)
+                {
+                    for (int y = 0; y < TileCountY; ++y)
+                    {
+                        if (Pieceheld.currentSquare == squares[x, y])
+                        {
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x + i, y + i) || IsLegalMoveBlack(x + i, y + i))
+                                    AvailableMoves.Add(squares[x + i, y + i]);
+                                else
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x + i, y - i) || IsLegalMoveBlack(x + i, y - i))
+                                    AvailableMoves.Add(squares[x + i, y - i]);
+                                else
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x - i, y - i) || IsLegalMoveBlack(x - i, y - i))
+                                    AvailableMoves.Add(squares[x - i, y - i]);
+                                else
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x - i, y + i) || IsLegalMoveBlack(x - i, y + i))
+                                    AvailableMoves.Add(squares[x - i, y + i]);
+                                else
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x + i, y) || IsLegalMoveBlack(x + i, y))
+                                    AvailableMoves.Add(squares[x + i, y]);
+                                else
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x - i, y) || IsLegalMoveBlack(x - i, y))
+                                    AvailableMoves.Add(squares[x - i, y]);
+                                else
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x, y + i) || IsLegalMoveBlack(x, y + i))
+                                    AvailableMoves.Add(squares[x, y + i]);
+                                else
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x, y - i) || IsLegalMoveBlack(x, y - i))
+                                    AvailableMoves.Add(squares[x, y - i]);
+                                else
+                                    break;
+                            }
+                            for (int i = 0; i < AvailableMoves.Count; ++i)
+                            {
+                                AvailableMoves[i].HighlightSquare();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    }
     private Piece Pieceheld()
     {
         for(int i = 0; i < WhitePieces.Length; ++i)
@@ -147,16 +404,16 @@ public class Board : MonoBehaviour
     {
         for (int i = 0; i < WhitePieces.Length; ++i)
         {
-            if (WhitePieces[i].PieceWasMoved)
+            if (WhitePieces[i].CheckForEnemy)
             {
                 for (int y = 0; y < BlackPieces.Length; ++y)
                 {
                     if (WhitePieces[i].currentSquare == BlackPieces[y].currentSquare)
                     {
-                        BlackPieces[y].Active = false;
+                        BlackPieces[y].PieceActive = false;
                     }
                 }
-                WhitePieces[i].PieceWasMoved = false;
+                WhitePieces[i].CheckForEnemy = false;
             }
         }
     }
@@ -164,17 +421,73 @@ public class Board : MonoBehaviour
     {
         for (int i = 0; i < BlackPieces.Length; ++i)
         {
-            if (BlackPieces[i].PieceWasMoved)
+            if (BlackPieces[i].CheckForEnemy)
             {
                 for (int y = 0; y < WhitePieces.Length; ++y)
                 {
                     if (BlackPieces[i].currentSquare == WhitePieces[y].currentSquare)
                     {
-                        WhitePieces[y].Active = false;
+                        WhitePieces[y].PieceActive = false;
                     }
                 }
-                BlackPieces[i].PieceWasMoved = false;
+                BlackPieces[i].CheckForEnemy = false;
             }
         }
+    }
+
+    private bool WithinBounds(int x, int y)
+    {
+        if (x < 8 && x > -1)
+        {
+            if (y < 8 && y > -1)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private bool IsLegalMoveWhite(int x, int y)
+    {
+        if(WithinBounds(x,y))
+        {
+            for (int z = 0; z < WhitePieces.Length; ++z)
+            {
+                if (WhitePieces[z].AvailableMovesCheck)
+                {
+                    for (int i = 0; i < WhitePieces.Length; ++i)
+                    {
+                        if (squares[x, y] == WhitePieces[i].currentSquare)
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    private bool IsLegalMoveBlack(int x, int y)
+    {
+
+        if (WithinBounds(x, y))
+        {
+            for (int z = 0; z < BlackPieces.Length; ++z)
+            {
+                if (BlackPieces[z].AvailableMovesCheck)
+                {
+                    for (int i = 0; i < BlackPieces.Length; ++i)
+                    {
+                        if (squares[x, y] == BlackPieces[i].currentSquare)
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

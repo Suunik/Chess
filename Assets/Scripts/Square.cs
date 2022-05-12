@@ -9,6 +9,7 @@ public class Square : MonoBehaviour
 
     private SpriteRenderer spriterenderer;
     private Color SquareColor;
+    public Sprite EnemyOnSquare;
 
     public Rect rect;
 
@@ -71,7 +72,16 @@ public class Square : MonoBehaviour
 
     public void HighlightSquare()
     {
-        SquareColor.a = 0.39f;
+        SquareColor.a = 0.7f;
         spriterenderer.color = SquareColor;
+    }
+    public void TransparentSquare()
+    {
+        SquareColor.a = 0f;
+        spriterenderer.color = SquareColor;
+    }
+    public void SetEnemySquare()
+    {
+        spriterenderer.sprite = EnemyOnSquare;
     }
 }
