@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Square : MonoBehaviour
 {
+    //Squares
     private char _row;
     private char _column;
 
@@ -16,6 +17,7 @@ public class Square : MonoBehaviour
     private void Awake()
     {
         spriterenderer = GetComponent<SpriteRenderer>();
+        
         SquareColor = spriterenderer.color;
         SquareColor.a = 0;
         spriterenderer.color = SquareColor;
@@ -83,5 +85,8 @@ public class Square : MonoBehaviour
     public void SetEnemySquare()
     {
         spriterenderer.sprite = EnemyOnSquare;
+        spriterenderer.size = new Vector2(2.1f, 2.1f);
+        SquareColor = new Color(0.6f, 0.13f, 0, 0.7f);
+        spriterenderer.color = SquareColor;
     }
 }

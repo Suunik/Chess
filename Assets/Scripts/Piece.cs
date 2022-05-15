@@ -6,27 +6,27 @@ public class Piece : MonoBehaviour
 {
     public int PieceNumber;
 
-    SpriteRenderer spriterenderer;
     private Rect Hitbox;
 
     public bool PieceHeld = false;
     public bool AvailableMovesCheck = false;
+    public bool PieceHasMoved = false;
     public bool CheckForEnemy = false;
     public bool PieceActive = true;
 
+    public bool CastleTime = false;
+    
+
     public Square currentSquare;
 
-
-    private void Awake()
-    {
-    }
     private void Update()
     {
         PieceMovement();
 
         if(!PieceActive)
         {
-            gameObject.SetActive(false);
+            Destroy(gameObject);
+            currentSquare = null;
         }
     }
 
@@ -51,7 +51,6 @@ public class Piece : MonoBehaviour
                 }
             }
         }
-
         //Liigutab nuppu hiire j2rgi
         if (PieceHeld)
         {
@@ -81,10 +80,20 @@ public class Piece : MonoBehaviour
                         {
                             CheckForEnemy = true;
                             currentSquare = Board.Instance.AvailableMoves[i];
-
+                            //Vangerdus kuningale
+                            if (PieceNumber == 5)
+                            {
+                                if (!PieceHasMoved)
+                                {
+                                    if (currentSquare.ReturnSquare() == "" + (char)97 + (char)(49 + 6))
+                                    {
+                                        CastleTime = true;
+                                    }
+                                }
+                            }
+                            PieceHasMoved = true;
                             Board.Instance.ClearAvailableMoves();
 
-                            Debug.Log(currentSquare.ReturnSquare());
                             Highlight(-0.3f);
                             break;
                         }
@@ -94,7 +103,6 @@ public class Piece : MonoBehaviour
                             transform.position = currentSquare.transform.position;
                             Board.Instance.ClearAvailableMoves();
                             Highlight(-0.3f);
-                            Debug.Log("Kaka");
                             break;
                         }
                     }
@@ -104,7 +112,6 @@ public class Piece : MonoBehaviour
                     transform.position = currentSquare.transform.position;
                     Board.Instance.ClearAvailableMoves();
                     Highlight(-0.3f);
-                    Debug.Log("Kaka");
                 }
             }
             PieceHeld = false;

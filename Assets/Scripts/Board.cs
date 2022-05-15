@@ -4,22 +4,26 @@ using UnityEngine;
 
 public class Board : MonoBehaviour
 {
-    public static Board Instance;
-
     static private int TileCountX = 8;
     static private int TileCountY = 8;
 
+    public static Board Instance;
+
+    //Squares
     public Square[,] squares = new Square[TileCountX, TileCountY];
     public List<Square> AvailableMoves = new List<Square>();
-
     public Square SquarePrefab;
 
+    //Pieces
     private Piece[] WhitePieces = new Piece[16];
     private Piece[] BlackPieces = new Piece[16];
 
     //Nupu spritede jaoks
     public Piece[] WhitePiecePrefab = new Piece[6];
     public Piece[] BlackPiecePrefab = new Piece[6];
+
+    //Gameplay
+    private int TurnCounter;
 
     void Awake()
     {
@@ -28,7 +32,6 @@ public class Board : MonoBehaviour
         SpawnSquares();
         SpawnAllWhitePieces();
         SpawnAllBlackPieces();
-
     }
 
     private void Update()
@@ -37,6 +40,7 @@ public class Board : MonoBehaviour
         CheckForWhitePieceCapture();
 
         CheckAvailableMoves(Pieceheld());
+        CheckForCastle();
     }
 
     //Spawning pieces and squares
@@ -53,13 +57,12 @@ public class Board : MonoBehaviour
             }
         }
     }
-
     private void SpawnAllWhitePieces()
     {
          //Spawns the pawns
         for (int i = 0; i < TileCountY; ++i)
         {
-            SpawnSingleWhitePiece(i, 0, 4, i);
+            SpawnSingleWhitePiece(i, 0, 1, i);
         }
 
         SpawnSingleWhitePiece(8, 1, 0, 0);
@@ -71,7 +74,6 @@ public class Board : MonoBehaviour
         SpawnSingleWhitePiece(14, 2, 0, 6);
         SpawnSingleWhitePiece(15, 1, 0, 7);
     }
-
     private void SpawnAllBlackPieces()
     {
         // Spawns the pawns
@@ -89,14 +91,12 @@ public class Board : MonoBehaviour
         SpawnSingleBlackPiece(14, 2, 7, 6);
         SpawnSingleBlackPiece(15, 1, 7, 7);
     }
-
     private void SpawnSingleWhitePiece(int PieceNumber, int PiecePrefab, int row, int column)
     {
         WhitePieces[PieceNumber] = Instantiate(WhitePiecePrefab[PiecePrefab], squares[row, column].transform.position, Quaternion.identity);
 
         WhitePieces[PieceNumber].currentSquare = squares[row, column];
     }
-
     private void SpawnSingleBlackPiece(int PieceNumber, int PiecePrefab, int row, int column)
     {
         BlackPieces[PieceNumber] = Instantiate(BlackPiecePrefab[PiecePrefab], squares[row, column].transform.position, Quaternion.identity);
@@ -104,18 +104,7 @@ public class Board : MonoBehaviour
         BlackPieces[PieceNumber].currentSquare = squares[row, column];
     }
 
-    public void ClearAvailableMoves()
-    {
-        for (int i = 0; i < AvailableMoves.Count; ++i)
-        {
-            AvailableMoves[i].TransparentSquare();
-        }
-
-        AvailableMoves.Clear();
-    }
-
     //Movement and capture
-
     private void CheckAvailableMoves(Piece Pieceheld)
     {
         //PAWN Movement
@@ -131,24 +120,47 @@ public class Board : MonoBehaviour
                         {
                             for (int z = 0; z < WhitePieces.Length; ++z)
                             {
-                                if (Pieceheld = WhitePieces[z])
+                                if (Pieceheld == WhitePieces[z])
                                 {
-                                    if (IsLegalMoveWhite(x + 1, y))
+                                    if (IsLegalMoveWhite(x + 1, y) && !CheckForBlackEnemy(x + 1, y))
                                         AvailableMoves.Add(squares[x + 1, y]);
+                                    
+                                    if(!Pieceheld.PieceHasMoved)
+                                    {
+                                        AvailableMoves.Add(squares[x + 2, y]);
+                                    }
+
+                                    if (CheckForBlackEnemy(x + 1, y + 1))
+                                        AvailableMoves.Add(squares[x + 1, y + 1]);
+                                    if (CheckForBlackEnemy(x + 1, y - 1))
+                                        AvailableMoves.Add(squares[x + 1, y - 1]);
+                                    break;
                                 }
                             }
                             for (int z = 0; z < BlackPieces.Length; ++z)
                             {
-                                if (Pieceheld = BlackPieces[z])
+                                if (Pieceheld == BlackPieces[z])
                                 {
-                                    if (IsLegalMoveBlack(x - 1, y))
+                                    if (IsLegalMoveBlack(x - 1, y) && !CheckForWhiteEnemy(x - 1, y))
                                         AvailableMoves.Add(squares[x - 1, y]);
+
+                                    if (!Pieceheld.PieceHasMoved)
+                                    {
+                                        AvailableMoves.Add(squares[x - 2, y]);
+                                    }
+
+                                    if (CheckForWhiteEnemy(x - 1, y + 1))
+                                        AvailableMoves.Add(squares[x - 1, y + 1]);
+                                    if (CheckForWhiteEnemy(x - 1, y - 1))
+                                        AvailableMoves.Add(squares[x - 1, y - 1]);
+                                    break;
                                 }
                             }
                             for (int i = 0; i < AvailableMoves.Count; ++i)
                             {
                                 AvailableMoves[i].HighlightSquare();
                             }
+                            Pieceheld.AvailableMovesCheck = false;
                         }
                     }
                 }
@@ -189,13 +201,33 @@ public class Board : MonoBehaviour
                             if (IsLegalMoveWhite(x - 1, y + 1) || IsLegalMoveBlack(x - 1, y + 1))
                                 AvailableMoves.Add(squares[x - 1, y + 1]);
 
+                            //Vangerdus
+                            if (!Pieceheld.PieceHasMoved)
+                            {
+                                for (int z = 0; z < WhitePieces.Length; ++z)
+                                {
+                                    if (Pieceheld == WhitePieces[z])
+                                    {
+                                        if (!WhitePieces[15].PieceHasMoved)
+                                        {
+                                            if (IsLegalMoveWhite(x, y + 1) && !CheckForBlackEnemy(x, y + 1))
+                                            {
+                                                if (IsLegalMoveWhite(x, y + 2) && !CheckForBlackEnemy(x, y + 2))
+                                                {
+                                                    AvailableMoves.Add(squares[x, y + 2]);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                             for (int i = 0; i < AvailableMoves.Count; ++i)
                             {
                                 AvailableMoves[i].HighlightSquare();
                             }
 
                             Pieceheld.AvailableMovesCheck = false;
-
                             break;
                         }
                     }
@@ -219,12 +251,17 @@ public class Board : MonoBehaviour
                                     AvailableMoves.Add(squares[x + i, y]);
                                 else
                                     break;
+                                if (CheckForBlackEnemy(x + i, y) || CheckForWhiteEnemy(x + i, y))
+                                    break;
                             }
+
                             for (int i = 1; i < 8; ++i)
                             {
                                 if (IsLegalMoveWhite(x - i, y) || IsLegalMoveBlack(x - i, y))
                                     AvailableMoves.Add(squares[x - i, y]);
                                 else
+                                    break;
+                                if (CheckForBlackEnemy(x - i, y) || CheckForWhiteEnemy(x - i, y))
                                     break;
                             }
                             for (int i = 1; i < 8; ++i)
@@ -233,6 +270,8 @@ public class Board : MonoBehaviour
                                     AvailableMoves.Add(squares[x, y + i]);
                                 else
                                     break;
+                                if (CheckForBlackEnemy(x, y + i) || CheckForWhiteEnemy(x, y + i))
+                                    break;
                             }
                             for (int i = 1; i < 8; ++i)
                             {
@@ -240,16 +279,20 @@ public class Board : MonoBehaviour
                                     AvailableMoves.Add(squares[x, y - i]);
                                 else
                                     break;
+                                if (CheckForBlackEnemy(x, y - i) || CheckForWhiteEnemy(x, y - i))
+                                    break;
+                                
                             }
+
                             for (int i = 0; i < AvailableMoves.Count; ++i)
                             {
                                 AvailableMoves[i].HighlightSquare();
                             }
+                            Pieceheld.AvailableMovesCheck = false;
                         }
                     }
                 }
             }
-
         }
         //HORSE Movement
         if (Pieceheld != null && Pieceheld.PieceNumber == 2)
@@ -283,6 +326,7 @@ public class Board : MonoBehaviour
                             {
                                 AvailableMoves[i].HighlightSquare();
                             }
+                            Pieceheld.AvailableMovesCheck = false;
                         }
                     }
                 }
@@ -299,41 +343,47 @@ public class Board : MonoBehaviour
                     {
                         if (Pieceheld.currentSquare == squares[x, y])
                         {
-                            for(int i = 1; i < 8; ++i)
+                            for (int i = 1; i < 8; ++i)
                             {
-                                if (IsLegalMoveWhite(x + i, y + i) || IsLegalMoveBlack(x + i, y + i))
+                                if (IsLegalMoveWhite(x + i, y + i) || IsLegalMoveBlack(x + i, y + i))  
                                     AvailableMoves.Add(squares[x + i, y + i]);
                                 else
                                     break;
-                            }
-                            for (int i = 1; i < 8; ++i)
-                            {
-
-                                if (IsLegalMoveWhite(x + i, y - i) || IsLegalMoveBlack(x + i, y - i))
-                                    AvailableMoves.Add(squares[x + i, y - i]);
-                                else
+                                if (CheckForBlackEnemy(x + i, y + i) || CheckForWhiteEnemy(x + i, y + i))
                                     break;
                             }
                             for (int i = 1; i < 8; ++i)
                             {
-
+                               if (IsLegalMoveWhite(x + i, y - i) || IsLegalMoveBlack(x + i, y - i))
+                                   AvailableMoves.Add(squares[x + i, y - i]);
+                               else
+                                   break;
+                                if (CheckForBlackEnemy(x + i, y - i) || CheckForWhiteEnemy(x + i, y - i))
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
                                 if (IsLegalMoveWhite(x - i, y - i) || IsLegalMoveBlack(x - i, y - i))
                                     AvailableMoves.Add(squares[x - i, y - i]);
                                 else
                                     break;
+                                if (CheckForBlackEnemy(x - i, y - i) || CheckForWhiteEnemy(x - i, y - i))
+                                    break;
                             }
                             for (int i = 1; i < 8; ++i)
                             {
-
                                 if (IsLegalMoveWhite(x - i, y + i) || IsLegalMoveBlack(x - i, y + i))
                                     AvailableMoves.Add(squares[x - i, y + i]);
                                 else
                                     break;
+                                 if (CheckForBlackEnemy(x - i, y + i) || CheckForWhiteEnemy(x - i, y + i))
+                                     break;
                             }
                             for (int i = 0; i < AvailableMoves.Count; ++i)
                             {
                                 AvailableMoves[i].HighlightSquare();
                             }
+                            Pieceheld.AvailableMovesCheck = false;
                         }
                     }
                 }
@@ -352,44 +402,21 @@ public class Board : MonoBehaviour
                         {
                             for (int i = 1; i < 8; ++i)
                             {
-                                if (IsLegalMoveWhite(x + i, y + i) || IsLegalMoveBlack(x + i, y + i))
-                                    AvailableMoves.Add(squares[x + i, y + i]);
-                                else
-                                    break;
-                            }
-                            for (int i = 1; i < 8; ++i)
-                            {
-                                if (IsLegalMoveWhite(x + i, y - i) || IsLegalMoveBlack(x + i, y - i))
-                                    AvailableMoves.Add(squares[x + i, y - i]);
-                                else
-                                    break;
-                            }
-                            for (int i = 1; i < 8; ++i)
-                            {
-                                if (IsLegalMoveWhite(x - i, y - i) || IsLegalMoveBlack(x - i, y - i))
-                                    AvailableMoves.Add(squares[x - i, y - i]);
-                                else
-                                    break;
-                            }
-                            for (int i = 1; i < 8; ++i)
-                            {
-                                if (IsLegalMoveWhite(x - i, y + i) || IsLegalMoveBlack(x - i, y + i))
-                                    AvailableMoves.Add(squares[x - i, y + i]);
-                                else
-                                    break;
-                            }
-                            for (int i = 1; i < 8; ++i)
-                            {
                                 if (IsLegalMoveWhite(x + i, y) || IsLegalMoveBlack(x + i, y))
                                     AvailableMoves.Add(squares[x + i, y]);
                                 else
                                     break;
+                                if (CheckForBlackEnemy(x + i, y) || CheckForWhiteEnemy(x + i, y))
+                                    break;
                             }
+
                             for (int i = 1; i < 8; ++i)
                             {
                                 if (IsLegalMoveWhite(x - i, y) || IsLegalMoveBlack(x - i, y))
                                     AvailableMoves.Add(squares[x - i, y]);
                                 else
+                                    break;
+                                if (CheckForBlackEnemy(x - i, y) || CheckForWhiteEnemy(x - i, y))
                                     break;
                             }
                             for (int i = 1; i < 8; ++i)
@@ -398,6 +425,9 @@ public class Board : MonoBehaviour
                                     AvailableMoves.Add(squares[x, y + i]);
                                 else
                                     break;
+                                if (CheckForBlackEnemy(x, y + i) || CheckForWhiteEnemy(x, y + i))
+                                    break;
+
                             }
                             for (int i = 1; i < 8; ++i)
                             {
@@ -405,17 +435,64 @@ public class Board : MonoBehaviour
                                     AvailableMoves.Add(squares[x, y - i]);
                                 else
                                     break;
+                                if (CheckForBlackEnemy(x, y - i) || CheckForWhiteEnemy(x, y - i))
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x + i, y + i) || IsLegalMoveBlack(x + i, y + i))
+                                    AvailableMoves.Add(squares[x + i, y + i]);
+                                else
+                                    break;
+                                if (CheckForBlackEnemy(x + i, y + i) || CheckForWhiteEnemy(x + i, y + i))
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x + i, y - i) || IsLegalMoveBlack(x + i, y - i))
+                                    AvailableMoves.Add(squares[x + i, y - i]);
+                                else
+                                    break;
+                                if (CheckForBlackEnemy(x + i, y - i) || CheckForWhiteEnemy(x + i, y - i))
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x - i, y - i) || IsLegalMoveBlack(x - i, y - i))
+                                    AvailableMoves.Add(squares[x - i, y - i]);
+                                else
+                                    break;
+                                if (CheckForBlackEnemy(x - i, y - i) || CheckForWhiteEnemy(x - i, y - i))
+                                    break;
+                            }
+                            for (int i = 1; i < 8; ++i)
+                            {
+                                if (IsLegalMoveWhite(x - i, y + i) || IsLegalMoveBlack(x - i, y + i))
+                                    AvailableMoves.Add(squares[x - i, y + i]);
+                                else
+                                    break;
+                                if (CheckForBlackEnemy(x - i, y + i) || CheckForWhiteEnemy(x - i, y + i))
+                                    break;
                             }
                             for (int i = 0; i < AvailableMoves.Count; ++i)
                             {
                                 AvailableMoves[i].HighlightSquare();
                             }
+                            Pieceheld.AvailableMovesCheck = false;
                         }
                     }
                 }
             }
         }
+    }
+    public void ClearAvailableMoves()
+    {
+        for (int i = 0; i < AvailableMoves.Count; ++i)
+        {
+            AvailableMoves[i].TransparentSquare();
+        }
 
+        AvailableMoves.Clear();
     }
     private Piece Pieceheld()
     {
@@ -470,7 +547,6 @@ public class Board : MonoBehaviour
             }
         }
     }
-
     private bool WithinBounds(int x, int y)
     {
         if (x < 8 && x > -1)
@@ -482,7 +558,6 @@ public class Board : MonoBehaviour
         }
         return false;
     }
-
     private bool IsLegalMoveWhite(int x, int y)
     {
         if(WithinBounds(x,y))
@@ -525,5 +600,55 @@ public class Board : MonoBehaviour
             }
         }
         return false;
+    }
+    private bool CheckForBlackEnemy(int x, int y)
+    {
+        if (WithinBounds(x, y))
+        {
+            for (int z = 0; z < WhitePieces.Length; ++z)
+            {
+                if (WhitePieces[z].AvailableMovesCheck)
+                {
+                    for (int i = 0; i < BlackPieces.Length; ++i)
+                    {
+                        if (squares[x, y] == BlackPieces[i].currentSquare)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    private bool CheckForWhiteEnemy(int x, int y)
+    {
+        if (WithinBounds(x, y))
+        {
+            if (WithinBounds(x, y))
+            {
+                for (int z = 0; z < BlackPieces.Length; ++z)
+                {
+                    for (int i = 0; i < WhitePieces.Length; ++i)
+                    {
+                        if (squares[x, y] == WhitePieces[i].currentSquare)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    //Special Moves
+    private void CheckForCastle()
+    {
+        if (WhitePieces[12].CastleTime)
+        {
+            WhitePieces[15].transform.position = squares[0, 5].transform.position;
+            WhitePieces[15].currentSquare = squares[0, 5];
+        }
     }
 }
