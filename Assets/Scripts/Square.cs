@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class Square : MonoBehaviour
 {
-    //Squares
     private char _row;
     private char _column;
 
@@ -29,10 +28,6 @@ public class Square : MonoBehaviour
                new Vector2(1.01f, 1.01f));
     }
 
-    private void Update()
-    {
-       
-    }
     public void PaintTheSquare()
     {
         if (Input.GetMouseButtonDown(0))

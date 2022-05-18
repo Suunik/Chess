@@ -14,6 +14,8 @@ public class Board : MonoBehaviour
     public List<Square> AvailableMoves = new List<Square>();
     public Square SquarePrefab;
 
+    private Square PawnTransformSquare;
+
     //Pieces
     private Piece[] WhitePieces = new Piece[16];
     private Piece[] BlackPieces = new Piece[16];
@@ -23,7 +25,8 @@ public class Board : MonoBehaviour
     public Piece[] BlackPiecePrefab = new Piece[6];
 
     //Gameplay
-    private int TurnCounter;
+    public int TurnCounter = 0;
+    public bool EnPassantCheck = false;
 
     void Awake()
     {
@@ -40,7 +43,28 @@ public class Board : MonoBehaviour
         CheckForWhitePieceCapture();
 
         CheckAvailableMoves(Pieceheld());
+
         CheckForCastle();
+        CheckForPawnTransform();
+
+        if (EnPassantCheck)
+        {
+            for (int i = 0; i < 8; ++i)
+            {
+                if (WhitePieces[i].EnPassantDone)
+                {
+                    for (int x = 0; x < 8; ++x)
+                    {
+                        if (BlackPieces[x].EnPassant)
+                        {
+                            BlackPieces[x].PieceActive = false;
+                        }
+                    }
+                    WhitePieces[i].EnPassantDone = false;
+                }
+            }
+            EnPassantCheck = false;
+        }
     }
 
     //Spawning pieces and squares
@@ -118,44 +142,119 @@ public class Board : MonoBehaviour
                     {
                         if (Pieceheld.currentSquare == squares[x, y])
                         {
-                            for (int z = 0; z < WhitePieces.Length; ++z)
+                            if (Pieceheld.PieceColor == 'w')
                             {
-                                if (Pieceheld == WhitePieces[z])
-                                {
-                                    if (IsLegalMoveWhite(x + 1, y) && !CheckForBlackEnemy(x + 1, y))
-                                        AvailableMoves.Add(squares[x + 1, y]);
-                                    
-                                    if(!Pieceheld.PieceHasMoved)
-                                    {
-                                        AvailableMoves.Add(squares[x + 2, y]);
-                                    }
+                                if (IsLegalMoveWhite(x + 1, y) && !CheckForBlackEnemy(x + 1, y))
+                                    AvailableMoves.Add(squares[x + 1, y]);
 
-                                    if (CheckForBlackEnemy(x + 1, y + 1))
-                                        AvailableMoves.Add(squares[x + 1, y + 1]);
-                                    if (CheckForBlackEnemy(x + 1, y - 1))
-                                        AvailableMoves.Add(squares[x + 1, y - 1]);
-                                    break;
+                                if (!Pieceheld.PieceHasMoved)
+                                {
+                                    AvailableMoves.Add(squares[x + 2, y]);
+                                }
+                                if (CheckForBlackEnemy(x + 1, y + 1))
+                                    AvailableMoves.Add(squares[x + 1, y + 1]);
+                                if (CheckForBlackEnemy(x + 1, y - 1))
+                                    AvailableMoves.Add(squares[x + 1, y - 1]);
+                                //En Passant
+                                if(Pieceheld.currentSquare == squares[4 , y])
+                                {
+                                    for (int i = 0; i < BlackPieces.Length; ++i)
+                                    {
+                                        //Kontrollib kas mustadel on en passant aktiveeritud
+                                        if (BlackPieces[i].EnPassant)
+                                        {
+                                            //otsib yles mis ruudul must nupp asub
+                                            for (int z = 0; z < TileCountX; ++z)
+                                            {
+                                                for (int c = 0; c < TileCountY; ++c)
+                                                {
+                                                    if (BlackPieces[i].currentSquare == squares[z, c])
+                                                    {
+                                                        if (WithinBounds(z, c - 1) && squares[z, c - 1] == Pieceheld.currentSquare)
+                                                        {
+                                                            if (Pieceheld.EnpassantSquare == null)
+                                                            {
+                                                                //Salvestab ruudu kuhu valge k2ima peab et EnPassant toimuks
+                                                                for (int PieceNumber = 0; PieceNumber < 8; ++PieceNumber)
+                                                                {
+                                                                    if (Pieceheld == WhitePieces[PieceNumber])
+                                                                    {
+                                                                        EnPassantCheck = true;
+                                                                        WhitePieces[PieceNumber].EnpassantSquare = squares[z + 1, c];
+                                                                    }
+                                                                }
+                                                            }
+                                                            AvailableMoves.Add(squares[z + 1, c]);
+                                                        }
+                                                        if (WithinBounds(z, c + 1) && squares[z, c + 1] == Pieceheld.currentSquare)
+                                                        {
+                                                            if (Pieceheld.EnpassantSquare == null)
+                                                            {
+                                                                //Salvestab ruudu kuhu valge k2ima peab et EnPassant toimuks
+                                                                for (int PieceNumber = 0; PieceNumber < 8; ++PieceNumber)
+                                                                {
+                                                                    if (Pieceheld == WhitePieces[PieceNumber])
+                                                                    {
+                                                                        EnPassantCheck = true;
+                                                                        WhitePieces[PieceNumber].EnpassantSquare = squares[z + 1, c];
+                                                                    }
+                                                                }
+                                                            }
+                                                            AvailableMoves.Add(squares[z + 1, c]);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                            for (int z = 0; z < BlackPieces.Length; ++z)
+
+                            if (Pieceheld.PieceColor == 'b')
                             {
-                                if (Pieceheld == BlackPieces[z])
+                                if (IsLegalMoveBlack(x - 1, y) && !CheckForWhiteEnemy(x - 1, y))
+                                    AvailableMoves.Add(squares[x - 1, y]);
+
+                                if (!Pieceheld.PieceHasMoved)
                                 {
-                                    if (IsLegalMoveBlack(x - 1, y) && !CheckForWhiteEnemy(x - 1, y))
-                                        AvailableMoves.Add(squares[x - 1, y]);
+                                    AvailableMoves.Add(squares[x - 2, y]);
+                                }
 
-                                    if (!Pieceheld.PieceHasMoved)
+                                if (CheckForWhiteEnemy(x - 1, y + 1))
+                                    AvailableMoves.Add(squares[x - 1, y + 1]);
+                                if (CheckForWhiteEnemy(x - 1, y - 1))
+                                    AvailableMoves.Add(squares[x - 1, y - 1]);
+                                //En passant
+                                if (Pieceheld.currentSquare == squares[3, y])
+                                {
+                                    for (int i = 0; i < WhitePieces.Length; ++i)
                                     {
-                                        AvailableMoves.Add(squares[x - 2, y]);
+                                        //Kontrollib kas valgetel on en passant aktiveeritud
+                                        if (WhitePieces[i].EnPassant)
+                                        {
+                                            //otsib yles mis ruudul must nupp asub
+                                            for (int z = 0; z < TileCountX; ++z)
+                                            {
+                                                for (int c = 0; c < TileCountY; ++c)
+                                                {
+                                                    if (WhitePieces[i].currentSquare == squares[z, c])
+                                                    {
+                                                        if (WithinBounds(z, c - 1) && squares[z, c - 1] == Pieceheld.currentSquare)
+                                                        {
+                                                            AvailableMoves.Add(squares[z - 1, c]);
+                                                        }
+                                                        if (WithinBounds(z, c + 1) && squares[z, c + 1] == Pieceheld.currentSquare)
+                                                        {
+                                                            AvailableMoves.Add(squares[z - 1, c]);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
-
-                                    if (CheckForWhiteEnemy(x - 1, y + 1))
-                                        AvailableMoves.Add(squares[x - 1, y + 1]);
-                                    if (CheckForWhiteEnemy(x - 1, y - 1))
-                                        AvailableMoves.Add(squares[x - 1, y - 1]);
-                                    break;
                                 }
                             }
+
                             for (int i = 0; i < AvailableMoves.Count; ++i)
                             {
                                 AvailableMoves[i].HighlightSquare();
@@ -204,24 +303,44 @@ public class Board : MonoBehaviour
                             //Vangerdus
                             if (!Pieceheld.PieceHasMoved)
                             {
-                                for (int z = 0; z < WhitePieces.Length; ++z)
+                                //Valge
+                                if (IsLegalMoveWhite(x, y + 1) && !CheckForBlackEnemy(x, y + 1))
                                 {
-                                    if (Pieceheld == WhitePieces[z])
+                                    if (IsLegalMoveWhite(x, y + 2) && !CheckForBlackEnemy(x, y + 2))
                                     {
-                                        if (!WhitePieces[15].PieceHasMoved)
+                                        AvailableMoves.Add(squares[x, y + 2]);
+                                    }
+                                }
+                                if (IsLegalMoveWhite(x, y - 1) && !CheckForBlackEnemy(x, y - 1))
+                                {
+                                    if (IsLegalMoveWhite(x, y - 2) && !CheckForBlackEnemy(x, y - 2))
+                                    {
+                                        if (IsLegalMoveWhite(x, y - 3) && !CheckForBlackEnemy(x, y - 3))
                                         {
-                                            if (IsLegalMoveWhite(x, y + 1) && !CheckForBlackEnemy(x, y + 1))
-                                            {
-                                                if (IsLegalMoveWhite(x, y + 2) && !CheckForBlackEnemy(x, y + 2))
-                                                {
-                                                    AvailableMoves.Add(squares[x, y + 2]);
-                                                }
-                                            }
+                                            AvailableMoves.Add(squares[x, y - 2]);
+                                        }
+                                    }
+                                }
+                                //Must
+                                if (IsLegalMoveBlack(x, y + 1) && !CheckForWhiteEnemy(x, y + 1))
+                                {
+                                    if (IsLegalMoveBlack(x, y + 2) && !CheckForWhiteEnemy(x, y + 2))
+                                    {
+                                        AvailableMoves.Add(squares[x, y + 2]);
+                                    }
+                                }
+                                if (IsLegalMoveBlack(x, y - 1) && !CheckForWhiteEnemy(x, y - 1))
+                                {
+                                    if (IsLegalMoveBlack(x, y - 2) && !CheckForWhiteEnemy(x, y - 2))
+                                    {
+                                        if (IsLegalMoveBlack(x, y - 3) && !CheckForWhiteEnemy(x, y - 3))
+                                        {
+                                            AvailableMoves.Add(squares[x, y - 2]);
                                         }
                                     }
                                 }
                             }
-
+                            
                             for (int i = 0; i < AvailableMoves.Count; ++i)
                             {
                                 AvailableMoves[i].HighlightSquare();
@@ -647,8 +766,70 @@ public class Board : MonoBehaviour
     {
         if (WhitePieces[12].CastleTime)
         {
-            WhitePieces[15].transform.position = squares[0, 5].transform.position;
-            WhitePieces[15].currentSquare = squares[0, 5];
+            if (WhitePieces[12].currentSquare == squares[0, 6])
+            {
+                WhitePieces[12].CastleTime = false;
+                WhitePieces[15].transform.position = squares[0, 5].transform.position;
+                WhitePieces[15].currentSquare = squares[0, 5];
+                WhitePieces[15].PieceHasMoved = true;
+            }
+            if (WhitePieces[12].currentSquare == squares[0, 2])
+            {
+                WhitePieces[12].CastleTime = false;
+                WhitePieces[8].transform.position = squares[0, 3].transform.position;
+                WhitePieces[8].currentSquare = squares[0, 3];
+                WhitePieces[8].PieceHasMoved = true;
+            }
         }
+        if (BlackPieces[12].CastleTime)
+        {
+            if (BlackPieces[12].currentSquare == squares[7, 6])
+            {
+                BlackPieces[12].CastleTime = false;
+                BlackPieces[15].transform.position = squares[7, 5].transform.position;
+                BlackPieces[15].currentSquare = squares[7, 5];
+                BlackPieces[15].PieceHasMoved = true;
+            }
+            if (BlackPieces[12].currentSquare == squares[7, 2])
+            {
+                BlackPieces[12].CastleTime = false;
+                BlackPieces[8].transform.position = squares[7, 3].transform.position;
+                BlackPieces[8].currentSquare = squares[7, 3];
+                BlackPieces[8].PieceHasMoved = true;
+            }
+        }
+    }
+    private void CheckForPawnTransform()
+    {
+        for(int i = 0; i < 8; ++i)
+        {
+            if(WhitePieces[i].PawnTransform)
+            {
+                WhitePieces[i].PawnTransform = false;
+                PawnTransformSquare = WhitePieces[i].currentSquare;
+                WhitePieces[i].gameObject.SetActive(false);
+                WhitePieces[i] = Instantiate(WhitePiecePrefab[4], WhitePieces[i].transform.position, Quaternion.identity);
+                WhitePieces[i].currentSquare = PawnTransformSquare;
+            }
+            if (BlackPieces[i].PawnTransform)
+            {
+                BlackPieces[i].PawnTransform = false;
+                PawnTransformSquare = BlackPieces[i].currentSquare;
+                BlackPieces[i].gameObject.SetActive(false);
+                BlackPieces[i] = Instantiate(BlackPiecePrefab[4], BlackPieces[i].transform.position, Quaternion.identity);
+                BlackPieces[i].currentSquare = PawnTransformSquare;
+            }
+        }
+    } 
+    private bool CheckForEnPassant()
+    {
+        for(int i = 0; i < BlackPieces.Length; ++i)
+        {
+            if(BlackPieces[i].EnPassant)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

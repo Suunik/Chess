@@ -6,6 +6,8 @@ public class Piece : MonoBehaviour
 {
     public int PieceNumber;
 
+    public char PieceColor;
+
     private Rect Hitbox;
 
     public bool PieceHeld = false;
@@ -15,15 +17,37 @@ public class Piece : MonoBehaviour
     public bool PieceActive = true;
 
     public bool CastleTime = false;
-    
+    public bool PawnTransform = false;
 
+    public bool EnPassant = false;
+    private int EnPassantTurn = 0;
+    public Square EnpassantSquare;
+    public bool EnPassantDone = false;
+
+    private string previousSquare;
     public Square currentSquare;
 
     private void Update()
     {
-        PieceMovement();
+        if(PieceColor == 'w' && (Board.Instance.TurnCounter % 2) == 0)
+            PieceMovement();
 
-        if(!PieceActive)
+        if (PieceColor == 'b' && (Board.Instance.TurnCounter % 2) != 0)
+            PieceMovement();
+
+        if (!Board.Instance.EnPassantCheck)
+        {
+            //Annab yhe k2igu en passanti jaoks
+            if (EnPassant)
+            {
+                if (EnPassantTurn != Board.Instance.TurnCounter)
+                {
+                    EnPassant = false;
+                }
+            }
+        }
+
+        if (!PieceActive)
         {
             Destroy(gameObject);
             currentSquare = null;
@@ -46,7 +70,7 @@ public class Piece : MonoBehaviour
                 {
                     PieceHeld = true;
                     AvailableMovesCheck = true;
-       
+
                     Highlight(0.3f);
                 }
             }
@@ -78,19 +102,79 @@ public class Piece : MonoBehaviour
 
                         if (transform.position == Board.Instance.AvailableMoves[i].transform.position)
                         {
+
                             CheckForEnemy = true;
+                            previousSquare = currentSquare.ReturnSquare();
                             currentSquare = Board.Instance.AvailableMoves[i];
+                            Board.Instance.TurnCounter = Board.Instance.TurnCounter + 1;
                             //Vangerdus kuningale
                             if (PieceNumber == 5)
                             {
                                 if (!PieceHasMoved)
                                 {
-                                    if (currentSquare.ReturnSquare() == "" + (char)97 + (char)(49 + 6))
+                                    if (PieceColor == 'w')
                                     {
-                                        CastleTime = true;
+                                        if (currentSquare.ReturnSquare() == "" + (char)97 + (char)(49 + 6))
+                                        {
+                                            CastleTime = true;
+                                        }
+                                        if (currentSquare.ReturnSquare() == "" + (char)97 + (char)(49 + 2))
+                                        {
+                                            CastleTime = true;
+                                        }
+                                    }
+                                    if (PieceColor == 'b')
+                                    {
+                                        if (currentSquare.ReturnSquare() == "" + (char)(97 + 7) + (char)(49 + 6))
+                                        {
+                                            CastleTime = true;
+                                        }
+                                        if (currentSquare.ReturnSquare() == "" + (char)(97 + 7) + (char)(49 + 2))
+                                        {
+                                            CastleTime = true;
+                                        }
                                     }
                                 }
                             }
+                            //Etturi Special moved
+                            if(PieceNumber == 0)
+                            {
+                                //Etturi l6ppu j6udmine
+                                for (int z = 0; z < 8; ++z)
+                                {
+                                    if (PieceColor == 'w')
+                                    {
+                                        if (currentSquare == Board.Instance.squares[7, z])
+                                        {
+                                            PawnTransform = true;
+                                        }
+                                    }
+                                    if (PieceColor == 'b')
+                                    {
+                                        if (currentSquare == Board.Instance.squares[0, z])
+                                        {
+                                            PawnTransform = true;
+                                        }
+                                    }
+                                }
+                                //En passant
+                                if (PieceColor == 'w' && currentSquare.ReturnSquare() == "" + (char)(previousSquare[0] + 2) + previousSquare[1])
+                                {
+                                    //Kui ettur k2is kaks edasi aktiveerib en passanti v6imaluse
+                                    EnPassant = true;
+                                    EnPassantTurn = Board.Instance.TurnCounter;
+                                }
+                                if(PieceColor == 'b' && currentSquare.ReturnSquare() == "" + (char)(previousSquare[0] - 2) + previousSquare[1])
+                                {
+                                    EnPassant = true;
+                                    EnPassantTurn = Board.Instance.TurnCounter;
+                                }
+                                if(EnpassantSquare == currentSquare)
+                                {
+                                    EnPassantDone = true;
+                                }
+                            }
+
                             PieceHasMoved = true;
                             Board.Instance.ClearAvailableMoves();
 

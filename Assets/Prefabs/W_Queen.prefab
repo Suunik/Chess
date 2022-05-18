@@ -96,8 +96,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   PieceNumber: 4
+  PieceColor: 119
   PieceHeld: 0
   AvailableMovesCheck: 0
+  PieceHasMoved: 0
   CheckForEnemy: 0
   PieceActive: 1
+  CastleTime: 0
+  PawnTransform: 0
   currentSquare: {fileID: 0}
