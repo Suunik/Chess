@@ -38,6 +38,7 @@ public class Square : MonoBehaviour
             {
                 if (mousepos.y > rect.yMin && mousepos.y < rect.yMax)
                 {
+                    Debug.Log(ReturnSquare());
                     if (spriterenderer.color.a > 0)
                     {
                         SquareColor.a = 0f;

@@ -46,25 +46,6 @@ public class Board : MonoBehaviour
 
         CheckForCastle();
         CheckForPawnTransform();
-
-        if (EnPassantCheck)
-        {
-            for (int i = 0; i < 8; ++i)
-            {
-                if (WhitePieces[i].EnPassantDone)
-                {
-                    for (int x = 0; x < 8; ++x)
-                    {
-                        if (BlackPieces[x].EnPassant)
-                        {
-                            BlackPieces[x].PieceActive = false;
-                        }
-                    }
-                    WhitePieces[i].EnPassantDone = false;
-                }
-            }
-            EnPassantCheck = false;
-        }
     }
 
     //Spawning pieces and squares
@@ -74,10 +55,10 @@ public class Board : MonoBehaviour
         {
             for (int column = 0; column < TileCountY; ++column)
             {
-                squares[row, column] = Instantiate(SquarePrefab, new Vector3((-3.5f + column), (-3.5f + row), -1), Quaternion.identity);
+                squares[column,row] = Instantiate(SquarePrefab, new Vector3((-3.5f + column), (-3.5f + row), -1), Quaternion.identity);
 
-                squares[row, column].SetRowAndColumn((char)(97 + row), (char)(49 + column));
-                squares[row, column].SetSquareName();
+                squares[column, row].SetRowAndColumn((char)(97 + column), (char)(49 + row));
+                squares[column, row].SetSquareName();
             }
         }
     }
@@ -115,13 +96,13 @@ public class Board : MonoBehaviour
         SpawnSingleBlackPiece(14, 2, 7, 6);
         SpawnSingleBlackPiece(15, 1, 7, 7);
     }
-    private void SpawnSingleWhitePiece(int PieceNumber, int PiecePrefab, int row, int column)
+    private void SpawnSingleWhitePiece(int PieceNumber, int PiecePrefab, int column, int row)
     {
         WhitePieces[PieceNumber] = Instantiate(WhitePiecePrefab[PiecePrefab], squares[row, column].transform.position, Quaternion.identity);
 
         WhitePieces[PieceNumber].currentSquare = squares[row, column];
     }
-    private void SpawnSingleBlackPiece(int PieceNumber, int PiecePrefab, int row, int column)
+    private void SpawnSingleBlackPiece(int PieceNumber, int PiecePrefab, int column, int row)
     {
         BlackPieces[PieceNumber] = Instantiate(BlackPiecePrefab[PiecePrefab], squares[row, column].transform.position, Quaternion.identity);
 
@@ -144,19 +125,19 @@ public class Board : MonoBehaviour
                         {
                             if (Pieceheld.PieceColor == 'w')
                             {
-                                if (IsLegalMoveWhite(x + 1, y) && !CheckForBlackEnemy(x + 1, y))
-                                    AvailableMoves.Add(squares[x + 1, y]);
+                                if (IsLegalMoveWhite(x, y + 1) && !CheckForBlackEnemy(x, y + 1))
+                                    AvailableMoves.Add(squares[x, y + 1]);
 
                                 if (!Pieceheld.PieceHasMoved)
                                 {
-                                    AvailableMoves.Add(squares[x + 2, y]);
+                                    AvailableMoves.Add(squares[x, y + 2]);
                                 }
                                 if (CheckForBlackEnemy(x + 1, y + 1))
                                     AvailableMoves.Add(squares[x + 1, y + 1]);
-                                if (CheckForBlackEnemy(x + 1, y - 1))
-                                    AvailableMoves.Add(squares[x + 1, y - 1]);
+                                if (CheckForBlackEnemy(x - 1, y + 1))
+                                    AvailableMoves.Add(squares[x - 1, y + 1]);
                                 //En Passant
-                                if(Pieceheld.currentSquare == squares[4 , y])
+                                if(Pieceheld.currentSquare == squares[x , 4])
                                 {
                                     for (int i = 0; i < BlackPieces.Length; ++i)
                                     {
@@ -170,7 +151,7 @@ public class Board : MonoBehaviour
                                                 {
                                                     if (BlackPieces[i].currentSquare == squares[z, c])
                                                     {
-                                                        if (WithinBounds(z, c - 1) && squares[z, c - 1] == Pieceheld.currentSquare)
+                                                        if (WithinBounds(z - 1, c) && squares[z - 1, c] == Pieceheld.currentSquare)
                                                         {
                                                             if (Pieceheld.EnpassantSquare == null)
                                                             {
@@ -180,13 +161,14 @@ public class Board : MonoBehaviour
                                                                     if (Pieceheld == WhitePieces[PieceNumber])
                                                                     {
                                                                         EnPassantCheck = true;
-                                                                        WhitePieces[PieceNumber].EnpassantSquare = squares[z + 1, c];
+                                                                        WhitePieces[PieceNumber].EnpassantSquare = squares[z, c + 1];
                                                                     }
                                                                 }
                                                             }
-                                                            AvailableMoves.Add(squares[z + 1, c]);
+                                                            
+                                                            AvailableMoves.Add(squares[z, c + 1]);
                                                         }
-                                                        if (WithinBounds(z, c + 1) && squares[z, c + 1] == Pieceheld.currentSquare)
+                                                        if (WithinBounds(z + 1, c) && squares[z + 1, c] == Pieceheld.currentSquare)
                                                         {
                                                             if (Pieceheld.EnpassantSquare == null)
                                                             {
@@ -196,11 +178,11 @@ public class Board : MonoBehaviour
                                                                     if (Pieceheld == WhitePieces[PieceNumber])
                                                                     {
                                                                         EnPassantCheck = true;
-                                                                        WhitePieces[PieceNumber].EnpassantSquare = squares[z + 1, c];
+                                                                        WhitePieces[PieceNumber].EnpassantSquare = squares[z, c + 1];
                                                                     }
                                                                 }
                                                             }
-                                                            AvailableMoves.Add(squares[z + 1, c]);
+                                                            AvailableMoves.Add(squares[z, c + 1]);
                                                         }
                                                     }
                                                 }
@@ -212,47 +194,18 @@ public class Board : MonoBehaviour
 
                             if (Pieceheld.PieceColor == 'b')
                             {
-                                if (IsLegalMoveBlack(x - 1, y) && !CheckForWhiteEnemy(x - 1, y))
-                                    AvailableMoves.Add(squares[x - 1, y]);
+                                if (IsLegalMoveBlack(x, y - 1) && !CheckForWhiteEnemy(x, y - 1))
+                                    AvailableMoves.Add(squares[x, y - 1]);
 
                                 if (!Pieceheld.PieceHasMoved)
                                 {
-                                    AvailableMoves.Add(squares[x - 2, y]);
+                                    AvailableMoves.Add(squares[x , y - 2]);
                                 }
 
-                                if (CheckForWhiteEnemy(x - 1, y + 1))
-                                    AvailableMoves.Add(squares[x - 1, y + 1]);
+                                if (CheckForWhiteEnemy(x + 1, y - 1))
+                                    AvailableMoves.Add(squares[x + 1, y - 1]);
                                 if (CheckForWhiteEnemy(x - 1, y - 1))
-                                    AvailableMoves.Add(squares[x - 1, y - 1]);
-                                //En passant
-                                if (Pieceheld.currentSquare == squares[3, y])
-                                {
-                                    for (int i = 0; i < WhitePieces.Length; ++i)
-                                    {
-                                        //Kontrollib kas valgetel on en passant aktiveeritud
-                                        if (WhitePieces[i].EnPassant)
-                                        {
-                                            //otsib yles mis ruudul must nupp asub
-                                            for (int z = 0; z < TileCountX; ++z)
-                                            {
-                                                for (int c = 0; c < TileCountY; ++c)
-                                                {
-                                                    if (WhitePieces[i].currentSquare == squares[z, c])
-                                                    {
-                                                        if (WithinBounds(z, c - 1) && squares[z, c - 1] == Pieceheld.currentSquare)
-                                                        {
-                                                            AvailableMoves.Add(squares[z - 1, c]);
-                                                        }
-                                                        if (WithinBounds(z, c + 1) && squares[z, c + 1] == Pieceheld.currentSquare)
-                                                        {
-                                                            AvailableMoves.Add(squares[z - 1, c]);
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                    AvailableMoves.Add(squares[x - 1, y - 1]);    
                             }
 
                             for (int i = 0; i < AvailableMoves.Count; ++i)
@@ -643,6 +596,26 @@ public class Board : MonoBehaviour
                     if (WhitePieces[i].currentSquare == BlackPieces[y].currentSquare)
                     {
                         BlackPieces[y].PieceActive = false;
+                    }
+                    if(WhitePieces[i].EnpassantSquare != null)
+                    {
+                        string white_square = WhitePieces[i].currentSquare.ReturnSquare();
+                        int white_square_horizontal = white_square[0];
+                        int white_square_vertical = white_square[1];
+                        Debug.Log(BlackPieces.Length);
+                        if (BlackPieces[y] != null)
+                        {
+                            string black_square = BlackPieces[y].currentSquare.ReturnSquare();
+                            int black_square_horizontal = black_square[0];
+                            int black_square_vertical = black_square[1];
+
+                            if (white_square_vertical - 1 == black_square_vertical && white_square_horizontal == black_square_horizontal)
+                            {
+                                BlackPieces[y].PieceActive = false;
+                                Debug.Log("Kaka");
+                                break;
+                            }
+                        }
                     }
                 }
                 WhitePieces[i].CheckForEnemy = false;

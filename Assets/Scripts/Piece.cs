@@ -106,7 +106,6 @@ public class Piece : MonoBehaviour
                             CheckForEnemy = true;
                             previousSquare = currentSquare.ReturnSquare();
                             currentSquare = Board.Instance.AvailableMoves[i];
-                            Board.Instance.TurnCounter = Board.Instance.TurnCounter + 1;
                             //Vangerdus kuningale
                             if (PieceNumber == 5)
                             {
@@ -158,16 +157,16 @@ public class Piece : MonoBehaviour
                                     }
                                 }
                                 //En passant
-                                if (PieceColor == 'w' && currentSquare.ReturnSquare() == "" + (char)(previousSquare[0] + 2) + previousSquare[1])
+                                if (PieceColor == 'w' && currentSquare.ReturnSquare() == "" + previousSquare[0] + (char)(previousSquare[1] + 2))
                                 {
                                     //Kui ettur k2is kaks edasi aktiveerib en passanti v6imaluse
                                     EnPassant = true;
-                                    EnPassantTurn = Board.Instance.TurnCounter;
+                                    EnPassantTurn = Board.Instance.TurnCounter + 1;
                                 }
-                                if(PieceColor == 'b' && currentSquare.ReturnSquare() == "" + (char)(previousSquare[0] - 2) + previousSquare[1])
+                                if(PieceColor == 'b' && currentSquare.ReturnSquare() == "" + previousSquare[0] + (char)(previousSquare[1] - 2))
                                 {
                                     EnPassant = true;
-                                    EnPassantTurn = Board.Instance.TurnCounter;
+                                    EnPassantTurn = Board.Instance.TurnCounter + 1;
                                 }
                                 if(EnpassantSquare == currentSquare)
                                 {
@@ -179,6 +178,7 @@ public class Piece : MonoBehaviour
                             Board.Instance.ClearAvailableMoves();
 
                             Highlight(-0.3f);
+                            Board.Instance.TurnCounter = Board.Instance.TurnCounter + 1;
                             break;
                         }
 
