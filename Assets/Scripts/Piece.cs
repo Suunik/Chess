@@ -29,11 +29,11 @@ public class Piece : MonoBehaviour
 
     private void Update()
     {
-        if(PieceColor == 'w' && (Board.Instance.TurnCounter % 2) == 0)
+        //if(PieceColor == 'w' && (Board.Instance.TurnCounter % 2) == 0)
             PieceMovement();
 
-        if (PieceColor == 'b' && (Board.Instance.TurnCounter % 2) != 0)
-            PieceMovement();
+       // if (PieceColor == 'b' && (Board.Instance.TurnCounter % 2) != 0)
+            //PieceMovement();
 
         if (!Board.Instance.EnPassantCheck)
         {
@@ -143,14 +143,14 @@ public class Piece : MonoBehaviour
                                 {
                                     if (PieceColor == 'w')
                                     {
-                                        if (currentSquare == Board.Instance.squares[7, z])
+                                        if (currentSquare == Board.Instance.squares[z, 7])
                                         {
                                             PawnTransform = true;
                                         }
                                     }
                                     if (PieceColor == 'b')
                                     {
-                                        if (currentSquare == Board.Instance.squares[0, z])
+                                        if (currentSquare == Board.Instance.squares[z, 0])
                                         {
                                             PawnTransform = true;
                                         }
