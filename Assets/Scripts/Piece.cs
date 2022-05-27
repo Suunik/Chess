@@ -29,18 +29,18 @@ public class Piece : MonoBehaviour
 
     private void Update()
     {
-        //if(PieceColor == 'w' && (Board.Instance.TurnCounter % 2) == 0)
+        if(PieceColor == 'w' && (Board.Instance.turn_counter % 2) == 0)
             PieceMovement();
 
-       // if (PieceColor == 'b' && (Board.Instance.TurnCounter % 2) != 0)
-            //PieceMovement();
+        if (PieceColor == 'b' && (Board.Instance.turn_counter % 2) != 0)
+            PieceMovement();
 
         if (!Board.Instance.EnPassantCheck)
         {
             //Annab yhe k2igu en passanti jaoks
             if (EnPassant)
             {
-                if (EnPassantTurn != Board.Instance.TurnCounter)
+                if (EnPassantTurn != Board.Instance.turn_counter)
                 {
                     EnPassant = false;
                 }
@@ -161,12 +161,12 @@ public class Piece : MonoBehaviour
                                 {
                                     //Kui ettur k2is kaks edasi aktiveerib en passanti v6imaluse
                                     EnPassant = true;
-                                    EnPassantTurn = Board.Instance.TurnCounter + 1;
+                                    EnPassantTurn = Board.Instance.turn_counter + 1;
                                 }
                                 if(PieceColor == 'b' && currentSquare.ReturnSquare() == "" + previousSquare[0] + (char)(previousSquare[1] - 2))
                                 {
                                     EnPassant = true;
-                                    EnPassantTurn = Board.Instance.TurnCounter + 1;
+                                    EnPassantTurn = Board.Instance.turn_counter + 1;
                                 }
                                 if(EnpassantSquare == currentSquare)
                                 {
@@ -178,7 +178,7 @@ public class Piece : MonoBehaviour
                             Board.Instance.ClearAvailableMoves();
 
                             Highlight(-0.3f);
-                            Board.Instance.TurnCounter = Board.Instance.TurnCounter + 1;
+                            Board.Instance.turn_counter = Board.Instance.turn_counter + 1;
                             break;
                         }
 
