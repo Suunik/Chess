@@ -56,10 +56,12 @@ TextureImporter:
     externalNormalMap: 0
     heightScale: 0.25
     normalMapFilter: 0
+    flipGreenChannel: 0
   isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -98,6 +100,7 @@ TextureImporter:
   textureFormatSet: 0
   ignorePngGamma: 0
   applyGammaDecoding: 0
+  swizzle: 50462976
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
@@ -388,9 +391,21 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      Chess pieces sprite_7: -9148115694743357190
+      Chess pieces sprite_0: -2181928352439534478
+      Chess pieces sprite_6: 3864338473797390550
+      Chess pieces sprite_1: 4903069810093887719
+      Chess pieces sprite_8: -4381174262104625768
+      Chess pieces sprite_5: 7286565800803407951
+      Chess pieces sprite_2: -7347171258353746836
+      Chess pieces sprite_3: 4255447027561562376
+      Chess pieces sprite_10: -7700563336099679684
+      Chess pieces sprite_11: 9105263771756731546
+      Chess pieces sprite_4: 535287106581885221
+      Chess pieces sprite_9: 3255251830576789201
   spritePackingTag: 
   pSDRemoveMatte: 0
-  pSDShowRemoveMatteOption: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 
