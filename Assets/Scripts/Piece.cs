@@ -29,18 +29,18 @@ public class Piece : MonoBehaviour
 
     private void Update()
     {
-        if(PieceColor == 'w' && (Board.Instance.turn_counter % 2) == 0)
+        if(PieceColor == 'w' && (Board.instance.turn_counter % 2) == 0)
             PieceMovement();
 
-        if (PieceColor == 'b' && (Board.Instance.turn_counter % 2) != 0)
+        if (PieceColor == 'b' && (Board.instance.turn_counter % 2) != 0)
             PieceMovement();
 
-        if (!Board.Instance.EnPassantCheck)
+        if (!Board.instance.enPassantCheck)
         {
             //Annab yhe k2igu en passanti jaoks
             if (EnPassant)
             {
-                if (EnPassantTurn != Board.Instance.turn_counter)
+                if (EnPassantTurn != Board.instance.turn_counter)
                 {
                     EnPassant = false;
                 }
@@ -91,21 +91,21 @@ public class Piece : MonoBehaviour
             //salvestab hiire lahti laskmisel nupule uue ruudu
             if (PieceHeld)
             {
-                if (Board.Instance.AvailableMoves.Count != 0)
+                if (Board.instance.availableMoves.Count != 0)
                 {
-                    for (int i = 0; i < Board.Instance.AvailableMoves.Count; ++i)
+                    for (int i = 0; i < Board.instance.availableMoves.Count; ++i)
                     {
                         //Z axise tagasi muutmiseks et ta kattuks laual asuva squarega
                         transform.position = new Vector3( Mathf.Clamp(Mathf.Round(transform.position.x -0.5f) +0.5f, -3.5f, 3.5f),
                                                           Mathf.Clamp(Mathf.Round(transform.position.y - 0.5f) +0.5f, -3.5f,3.5f),
                                                           -1);
 
-                        if (transform.position == Board.Instance.AvailableMoves[i].transform.position)
+                        if (transform.position == Board.instance.availableMoves[i].transform.position)
                         {
 
                             CheckForEnemy = true;
                             previousSquare = currentSquare.ReturnSquare();
-                            currentSquare = Board.Instance.AvailableMoves[i];
+                            currentSquare = Board.instance.availableMoves[i];
                             //Vangerdus kuningale
                             if (PieceNumber == 5)
                             {
@@ -143,14 +143,14 @@ public class Piece : MonoBehaviour
                                 {
                                     if (PieceColor == 'w')
                                     {
-                                        if (currentSquare == Board.Instance.squares[z, 7])
+                                        if (currentSquare == Board.instance.squares[z, 7])
                                         {
                                             PawnTransform = true;
                                         }
                                     }
                                     if (PieceColor == 'b')
                                     {
-                                        if (currentSquare == Board.Instance.squares[z, 0])
+                                        if (currentSquare == Board.instance.squares[z, 0])
                                         {
                                             PawnTransform = true;
                                         }
@@ -161,12 +161,12 @@ public class Piece : MonoBehaviour
                                 {
                                     //Kui ettur k2is kaks edasi aktiveerib en passanti v6imaluse
                                     EnPassant = true;
-                                    EnPassantTurn = Board.Instance.turn_counter + 1;
+                                    EnPassantTurn = Board.instance.turn_counter + 1;
                                 }
                                 if(PieceColor == 'b' && currentSquare.ReturnSquare() == "" + previousSquare[0] + (char)(previousSquare[1] - 2))
                                 {
                                     EnPassant = true;
-                                    EnPassantTurn = Board.Instance.turn_counter + 1;
+                                    EnPassantTurn = Board.instance.turn_counter + 1;
                                 }
                                 if(EnpassantSquare == currentSquare)
                                 {
@@ -175,17 +175,17 @@ public class Piece : MonoBehaviour
                             }
 
                             PieceHasMoved = true;
-                            Board.Instance.ClearAvailableMoves();
+                            Board.instance.ClearAvailableMoves();
 
                             Highlight(-0.3f);
-                            Board.Instance.turn_counter = Board.Instance.turn_counter + 1;
+                            Board.instance.turn_counter = Board.instance.turn_counter + 1;
                             break;
                         }
 
-                        if (i == Board.Instance.AvailableMoves.Count - 1)
+                        if (i == Board.instance.availableMoves.Count - 1)
                         {
                             transform.position = currentSquare.transform.position;
-                            Board.Instance.ClearAvailableMoves();
+                            Board.instance.ClearAvailableMoves();
                             Highlight(-0.3f);
                             break;
                         }
@@ -194,7 +194,7 @@ public class Piece : MonoBehaviour
                 else
                 {
                     transform.position = currentSquare.transform.position;
-                    Board.Instance.ClearAvailableMoves();
+                    Board.instance.ClearAvailableMoves();
                     Highlight(-0.3f);
                 }
             }

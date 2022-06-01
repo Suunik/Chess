@@ -4,34 +4,37 @@ using UnityEngine;
 
 public class Board : MonoBehaviour
 {
-    static private int TileCountX = 8;
-    static private int TileCountY = 8;
+    static private int TILE_COUNT_X = 8;
+    static private int TILE_COUNT_Y = 8;
 
-    public static Board Instance;
+    public static Board instance;
 
     //Squares
-    public Square SquarePrefab;
-    public Square[,] squares = new Square[TileCountX, TileCountY];
-    public List<Square> AvailableMoves = new List<Square>();
-    private List<Square> EnemyAvailableMoves = new List<Square>();
-
+    public Square squarePrefab;
+    public Square[,] squares = new Square[TILE_COUNT_X, TILE_COUNT_Y];
+    public List<Square> availableMoves = new List<Square>();
+    private List<Square> enemyAvailableMoves = new List<Square>();
+    private List<Square> kingAttackersquare = new List<Square>();
+ 
     //Pieces
-    private Piece[] WhitePieces = new Piece[16];
-    private Piece[] BlackPieces = new Piece[16];
-    private List<Piece> KingAttackers = new List<Piece>();
+    private Piece[] whitePieces = new Piece[16];
+    private Piece[] blackPieces = new Piece[16];
+    private List<Piece> kingAttackers = new List<Piece>();
 
     //Nupu spritede jaoks
-    public Piece[] WhitePiecePrefab = new Piece[6];
-    public Piece[] BlackPiecePrefab = new Piece[6];
+    public Piece[] whitePiecePrefab = new Piece[6];
+    public Piece[] blackPiecePrefab = new Piece[6];
 
     //Gameplay
+    private bool check = false;
+
     public int turn_counter = 0;
     public int turn_flag = 0;
-    public bool EnPassantCheck = false;
+    public bool enPassantCheck = false;
 
     void Awake()
     {
-        Instance = this;
+        instance = this;
 
         SpawnSquares();
         SpawnAllWhitePieces();
@@ -48,7 +51,7 @@ public class Board : MonoBehaviour
             CheckForWhitePieceCapture();
             CheckForCastle();
             CheckForPawnTransform();
-            CheckForChecks();
+            checkForKingAttackers();
 
             turn_flag = turn_counter;
         }
@@ -58,11 +61,11 @@ public class Board : MonoBehaviour
     //Spawning pieces and squares
     private void SpawnSquares()
     {
-        for (int row = 0; row < TileCountX; ++row)
+        for (int row = 0; row < TILE_COUNT_X; ++row)
         {
-            for (int column = 0; column < TileCountY; ++column)
+            for (int column = 0; column < TILE_COUNT_Y; ++column)
             {
-                squares[column, row] = Instantiate(SquarePrefab, new Vector3((-3.5f + column), (-3.5f + row), -1), Quaternion.identity);
+                squares[column, row] = Instantiate(squarePrefab, new Vector3((-3.5f + column), (-3.5f + row), -1), Quaternion.identity);
 
                 squares[column, row].SetRowAndColumn((char)(97 + column), (char)(49 + row));
                 squares[column, row].SetSquareName();
@@ -72,7 +75,7 @@ public class Board : MonoBehaviour
     private void SpawnAllWhitePieces()
     {
         //Spawns the pawns
-        for (int i = 0; i < TileCountY; ++i)
+        for (int i = 0; i < TILE_COUNT_Y; ++i)
         {
             SpawnSingleWhitePiece(i, 0, 1, i);
         }
@@ -89,7 +92,7 @@ public class Board : MonoBehaviour
     private void SpawnAllBlackPieces()
     {
         // Spawns the pawns
-        for (int i = 0; i < TileCountY; ++i)
+        for (int i = 0; i < TILE_COUNT_Y; ++i)
         {
             SpawnSingleBlackPiece(i, 0, 6, i);
         }
@@ -105,15 +108,15 @@ public class Board : MonoBehaviour
     }
     private void SpawnSingleWhitePiece(int PieceNumber, int PiecePrefab, int column, int row)
     {
-        WhitePieces[PieceNumber] = Instantiate(WhitePiecePrefab[PiecePrefab], squares[row, column].transform.position, Quaternion.identity);
+        whitePieces[PieceNumber] = Instantiate(whitePiecePrefab[PiecePrefab], squares[row, column].transform.position, Quaternion.identity);
 
-        WhitePieces[PieceNumber].currentSquare = squares[row, column];
+        whitePieces[PieceNumber].currentSquare = squares[row, column];
     }
     private void SpawnSingleBlackPiece(int PieceNumber, int PiecePrefab, int column, int row)
     {
-        BlackPieces[PieceNumber] = Instantiate(BlackPiecePrefab[PiecePrefab], squares[row, column].transform.position, Quaternion.identity);
+        blackPieces[PieceNumber] = Instantiate(blackPiecePrefab[PiecePrefab], squares[row, column].transform.position, Quaternion.identity);
 
-        BlackPieces[PieceNumber].currentSquare = squares[row, column];
+        blackPieces[PieceNumber].currentSquare = squares[row, column];
     }
     private int[] ReturnRowColumn(Piece CurrentPiece)
     {
@@ -134,26 +137,51 @@ public class Board : MonoBehaviour
             {
                 //PAWN Movement
                 if (Pieceheld.PieceNumber == 0)
-                     AvailableMoves = PawnMoves(Pieceheld);
+                {
+                    if (!check)
+                        availableMoves = PawnMoves(Pieceheld);
+                    else
+                        availableMoves = kingDefenderMoves(Pieceheld);
+                }
                 //ROOK Movement
                 if (Pieceheld.PieceNumber == 1)
-                    AvailableMoves = RookMoves(Pieceheld);
+                {
+                    if (!check)
+                        availableMoves = RookMoves(Pieceheld);
+                    else
+                        availableMoves = kingDefenderMoves(Pieceheld);
+                }
                 //HORSE Movement
                 if (Pieceheld.PieceNumber == 2)
-                    AvailableMoves = HorseMoves(Pieceheld);
+                {
+                    if (!check)
+                        availableMoves = HorseMoves(Pieceheld);
+                    else
+                        availableMoves = kingDefenderMoves(Pieceheld);
+                }
                 //BISHOP Movement
                 if (Pieceheld.PieceNumber == 3)
-                    AvailableMoves = BishopMoves(Pieceheld);
+                {
+                    if (!check)
+                        availableMoves = BishopMoves(Pieceheld);
+                    else
+                        availableMoves = kingDefenderMoves(Pieceheld);
+                }
                 //QUEEN Movement
                 if (Pieceheld.PieceNumber == 4)
-                    AvailableMoves = QueenMoves(Pieceheld);
+                {
+                    if (!check)
+                        availableMoves = QueenMoves(Pieceheld);
+                    else
+                        availableMoves = kingDefenderMoves(Pieceheld);
+                }
                 //King Movement
                 if (Pieceheld.PieceNumber == 5)
-                    AvailableMoves = KingMoves(Pieceheld);
+                    availableMoves = KingMoves(Pieceheld);
 
-                for (int i = 0; i < AvailableMoves.Count; ++i)
+                for (int i = 0; i < availableMoves.Count; ++i)
                 {
-                    AvailableMoves[i].HighlightSquare();
+                    availableMoves[i].HighlightSquare();
                 }
                 Pieceheld.AvailableMovesCheck = false;
             }
@@ -161,103 +189,103 @@ public class Board : MonoBehaviour
     }
     public void ClearAvailableMoves()
     {
-        for (int i = 0; i < AvailableMoves.Count; ++i)
+        for (int i = 0; i < availableMoves.Count; ++i)
         {
-            AvailableMoves[i].TransparentSquare();
+            availableMoves[i].TransparentSquare();
         }
 
-        AvailableMoves.Clear();
+        availableMoves.Clear();
     }
     private Piece Pieceheld()
     {
-        for (int i = 0; i < WhitePieces.Length; ++i)
+        for (int i = 0; i < whitePieces.Length; ++i)
         {
-            if (WhitePieces[i].PieceHeld)
+            if (whitePieces[i].PieceHeld)
             {
-                return WhitePieces[i];
+                return whitePieces[i];
             }
         }
 
-        for (int i = 0; i < BlackPieces.Length; ++i)
+        for (int i = 0; i < blackPieces.Length; ++i)
         {
-            if (BlackPieces[i].PieceHeld)
+            if (blackPieces[i].PieceHeld)
             {
-                return BlackPieces[i];
+                return blackPieces[i];
             }
         }
         return null;
     }
     private void CheckForWhitePieceCapture()
     {
-        for (int i = 0; i < WhitePieces.Length; ++i)
+        for (int i = 0; i < whitePieces.Length; ++i)
         {
-            if (WhitePieces[i].CheckForEnemy)
+            if (whitePieces[i].CheckForEnemy)
             {
-                for (int y = 0; y < BlackPieces.Length; ++y)
+                for (int y = 0; y < blackPieces.Length; ++y)
                 {
-                    if (WhitePieces[i].currentSquare == BlackPieces[y].currentSquare)
+                    if (whitePieces[i].currentSquare == blackPieces[y].currentSquare)
                     {
-                        BlackPieces[y].PieceActive = false;
+                        blackPieces[y].PieceActive = false;
                     }
-                    if (WhitePieces[i].EnpassantSquare != null)
+                    if (whitePieces[i].EnpassantSquare != null)
                     {
-                        string white_square = WhitePieces[i].currentSquare.ReturnSquare();
+                        string white_square = whitePieces[i].currentSquare.ReturnSquare();
                         int white_square_horizontal = white_square[0];
                         int white_square_vertical = white_square[1];
 
-                        if (BlackPieces[y] != null)
+                        if (blackPieces[y] != null)
                         {
-                            string black_square = BlackPieces[y].currentSquare.ReturnSquare();
+                            string black_square = blackPieces[y].currentSquare.ReturnSquare();
                             int black_square_horizontal = black_square[0];
                             int black_square_vertical = black_square[1];
 
                             if (white_square_vertical - 1 == black_square_vertical && white_square_horizontal == black_square_horizontal)
                             {
-                                BlackPieces[y].PieceActive = false;
+                                blackPieces[y].PieceActive = false;
                                 Debug.Log("Kaka");
                                 break;
                             }
                         }
                     }
                 }
-                WhitePieces[i].CheckForEnemy = false;
+                whitePieces[i].CheckForEnemy = false;
             }
         }
     }
     private void CheckForBlackPieceCapture()
     {
-        for (int i = 0; i < BlackPieces.Length; ++i)
+        for (int i = 0; i < blackPieces.Length; ++i)
         {
-            if (BlackPieces[i].CheckForEnemy)
+            if (blackPieces[i].CheckForEnemy)
             {
-                for (int y = 0; y < WhitePieces.Length; ++y)
+                for (int y = 0; y < whitePieces.Length; ++y)
                 {
-                    if (BlackPieces[i].currentSquare == WhitePieces[y].currentSquare)
+                    if (blackPieces[i].currentSquare == whitePieces[y].currentSquare)
                     {
-                        WhitePieces[y].PieceActive = false;
+                        whitePieces[y].PieceActive = false;
                     }
-                    if (BlackPieces[i].EnpassantSquare != null)
+                    if (blackPieces[i].EnpassantSquare != null)
                     {
-                        string black_square = BlackPieces[i].currentSquare.ReturnSquare();
+                        string black_square = blackPieces[i].currentSquare.ReturnSquare();
                         int black_square_horizontal = black_square[0];
                         int black_square_vertical = black_square[1];
 
-                        if (BlackPieces[y] != null)
+                        if (blackPieces[y] != null)
                         {
-                            string white_square = WhitePieces[y].currentSquare.ReturnSquare();
+                            string white_square = whitePieces[y].currentSquare.ReturnSquare();
                             int white_square_horizontal = white_square[0];
                             int white_square_vertial = white_square[1];
 
                             if (black_square_vertical + 1 == white_square_vertial && black_square_horizontal == white_square_horizontal)
                             {
-                                WhitePieces[y].PieceActive = false;
+                                whitePieces[y].PieceActive = false;
                                 Debug.Log("Kaka");
                                 break;
                             }
                         }
                     }
                 }
-                BlackPieces[i].CheckForEnemy = false;
+                blackPieces[i].CheckForEnemy = false;
             }
         }
     }
@@ -278,15 +306,15 @@ public class Board : MonoBehaviour
         {
             if (Piece.PieceColor == 'w')
             {
-                for (int i = 0; i < WhitePieces.Length; ++i)
+                for (int i = 0; i < whitePieces.Length; ++i)
                 {
-                    if (squares[x, y] == WhitePieces[i].currentSquare)
+                    if (squares[x, y] == whitePieces[i].currentSquare)
                     {
                         return false;
                     }
                     if (Piece.PieceNumber == 5)
                     {
-                        foreach (Square enemy_squares in EnemyAvailableMoves)
+                        foreach (Square enemy_squares in enemyAvailableMoves)
                         {
                             if(enemy_squares == squares[x,y])
                             {
@@ -298,15 +326,15 @@ public class Board : MonoBehaviour
             }
             else
             {
-                for (int i = 0; i < BlackPieces.Length; ++i)
+                for (int i = 0; i < blackPieces.Length; ++i)
                 {
-                    if (squares[x, y] == BlackPieces[i].currentSquare)
+                    if (squares[x, y] == blackPieces[i].currentSquare)
                     {
                         return false;
                     }
                     if (Piece.PieceNumber == 5)
                     {
-                        foreach (Square enemy_squares in EnemyAvailableMoves)
+                        foreach (Square enemy_squares in enemyAvailableMoves)
                         {
                             if (enemy_squares == squares[x, y])
                             {
@@ -326,27 +354,19 @@ public class Board : MonoBehaviour
         {
             if (Piece.PieceColor == 'w')
             {
-                for (int i = 0; i < BlackPieces.Length; ++i)
+                for (int i = 0; i < blackPieces.Length; ++i)
                 {
-                    if (squares[x, y] == BlackPieces[i].currentSquare)
+                    if (squares[x, y] == blackPieces[i].currentSquare)
                     {
-                        if(i == 12)
-                        {
-                            return false;
-                        }
                         return true;
                     }
                 }
             }
             else
-                for (int i = 0; i < WhitePieces.Length; ++i)
+                for (int i = 0; i < whitePieces.Length; ++i)
                 {
-                    if (squares[x, y] == WhitePieces[i].currentSquare)
+                    if (squares[x, y] == whitePieces[i].currentSquare)
                     {
-                        if (i == 12)
-                        {
-                            return false;
-                        }
                         return true;
                     }
                 }
@@ -361,11 +381,11 @@ public class Board : MonoBehaviour
             List<Square> pawn_squares = PawnAttackMoves(CurrentPiece);
             for (int index = 0; index < pawn_squares.Count; ++index)
             {
-                EnemyAvailableMoves.Add(pawn_squares[index]);
-                if(CurrentPiece.PieceColor == 'b' && WhitePieces[12].currentSquare == pawn_squares[index])
-                    KingAttackers.Add(CurrentPiece);
-                if (CurrentPiece.PieceColor == 'w' && BlackPieces[12].currentSquare == pawn_squares[index])
-                    KingAttackers.Add(CurrentPiece);
+                enemyAvailableMoves.Add(pawn_squares[index]);
+                if(CurrentPiece.PieceColor == 'b' && whitePieces[12].currentSquare == pawn_squares[index])
+                    kingAttackers.Add(CurrentPiece);
+                if (CurrentPiece.PieceColor == 'w' && blackPieces[12].currentSquare == pawn_squares[index])
+                    kingAttackers.Add(CurrentPiece);
             }
         }
         //Rook
@@ -374,11 +394,11 @@ public class Board : MonoBehaviour
             List<Square> rook_squares = RookMoves(CurrentPiece);
             for (int index = 0; index < rook_squares.Count; ++index)
             {
-                EnemyAvailableMoves.Add(rook_squares[index]);
-                if (CurrentPiece.PieceColor == 'b' && WhitePieces[12].currentSquare == rook_squares[index])
-                    KingAttackers.Add(CurrentPiece);
-                if (CurrentPiece.PieceColor == 'w' && BlackPieces[12].currentSquare == rook_squares[index])
-                    KingAttackers.Add(CurrentPiece);
+                enemyAvailableMoves.Add(rook_squares[index]);
+                if (CurrentPiece.PieceColor == 'b' && whitePieces[12].currentSquare == rook_squares[index])
+                    kingAttackers.Add(CurrentPiece);
+                if (CurrentPiece.PieceColor == 'w' && blackPieces[12].currentSquare == rook_squares[index])
+                    kingAttackers.Add(CurrentPiece);
             }
         }
         //Horse
@@ -387,11 +407,11 @@ public class Board : MonoBehaviour
             List<Square> horse_squares = HorseMoves(CurrentPiece);
             for (int index = 0; index < horse_squares.Count; ++index)
             {
-                EnemyAvailableMoves.Add(horse_squares[index]);
-                if (CurrentPiece.PieceColor == 'b' && WhitePieces[12].currentSquare == horse_squares[index])
-                    KingAttackers.Add(CurrentPiece);
-                if (CurrentPiece.PieceColor == 'w' && BlackPieces[12].currentSquare == horse_squares[index])
-                    KingAttackers.Add(CurrentPiece);
+                enemyAvailableMoves.Add(horse_squares[index]);
+                if (CurrentPiece.PieceColor == 'b' && whitePieces[12].currentSquare == horse_squares[index])
+                    kingAttackers.Add(CurrentPiece);
+                if (CurrentPiece.PieceColor == 'w' && blackPieces[12].currentSquare == horse_squares[index])
+                    kingAttackers.Add(CurrentPiece);
             }
         }
         //Bishop
@@ -400,11 +420,11 @@ public class Board : MonoBehaviour
             List<Square> bishop_squares = BishopMoves(CurrentPiece);
             for (int index = 0; index < bishop_squares.Count; ++index)
             {
-                EnemyAvailableMoves.Add(bishop_squares[index]);
-                if (CurrentPiece.PieceColor == 'b' && WhitePieces[12].currentSquare == bishop_squares[index])
-                    KingAttackers.Add(CurrentPiece);
-                if (CurrentPiece.PieceColor == 'w' && BlackPieces[12].currentSquare == bishop_squares[index])
-                    KingAttackers.Add(CurrentPiece);
+                enemyAvailableMoves.Add(bishop_squares[index]);
+                if (CurrentPiece.PieceColor == 'b' && whitePieces[12].currentSquare == bishop_squares[index])
+                    kingAttackers.Add(CurrentPiece);
+                if (CurrentPiece.PieceColor == 'w' && blackPieces[12].currentSquare == bishop_squares[index])
+                    kingAttackers.Add(CurrentPiece);
             }
         }
         //Queen
@@ -413,11 +433,11 @@ public class Board : MonoBehaviour
             List<Square> queen_squares = QueenMoves(CurrentPiece);
             for (int index = 0; index < queen_squares.Count; ++index)
             {
-                EnemyAvailableMoves.Add(queen_squares[index]);
-                if (CurrentPiece.PieceColor == 'b' && WhitePieces[12].currentSquare == queen_squares[index])
-                    KingAttackers.Add(CurrentPiece);
-                if (CurrentPiece.PieceColor == 'w' && BlackPieces[12].currentSquare == queen_squares[index])
-                    KingAttackers.Add(CurrentPiece);
+                enemyAvailableMoves.Add(queen_squares[index]);
+                if (CurrentPiece.PieceColor == 'b' && whitePieces[12].currentSquare == queen_squares[index])
+                    kingAttackers.Add(CurrentPiece);
+                if (CurrentPiece.PieceColor == 'w' && blackPieces[12].currentSquare == queen_squares[index])
+                    kingAttackers.Add(CurrentPiece);
             }
         }
         //King
@@ -426,13 +446,205 @@ public class Board : MonoBehaviour
             List<Square> king_squares = KingMoves(CurrentPiece);
             for (int index = 0; index < king_squares.Count; ++index)
             {
-                EnemyAvailableMoves.Add(king_squares[index]);
-                if (CurrentPiece.PieceColor == 'b' && WhitePieces[12].currentSquare == king_squares[index])
-                    KingAttackers.Add(CurrentPiece);
-                if (CurrentPiece.PieceColor == 'w' && BlackPieces[12].currentSquare == king_squares[index])
-                    KingAttackers.Add(CurrentPiece);
+                enemyAvailableMoves.Add(king_squares[index]);
+                if (CurrentPiece.PieceColor == 'b' && whitePieces[12].currentSquare == king_squares[index])
+                    kingAttackers.Add(CurrentPiece);
+                if (CurrentPiece.PieceColor == 'w' && blackPieces[12].currentSquare == king_squares[index])
+                    kingAttackers.Add(CurrentPiece);
             }
         }
+    }
+    private void kingAttackerMoves(Piece kingAttacker,Piece enemyKing)
+    {
+        kingAttackersquare.Clear();
+        //Kuninga asukoht
+        int king_row = ReturnRowColumn(enemyKing)[0];
+        int king_column = ReturnRowColumn(enemyKing)[1];
+        //suund kuhu poole ruute arvutada ja kui mitu ruutu
+        int attacker_direction_x =
+             kingAttacker.currentSquare.ReturnSquare()[0] - enemyKing.currentSquare.ReturnSquare()[0];
+        int attacker_direction_y =
+             kingAttacker.currentSquare.ReturnSquare()[1] - enemyKing.currentSquare.ReturnSquare()[1];
+        //all vasakul
+        if(attacker_direction_x < 0 && attacker_direction_y < 0)
+        {
+            while(attacker_direction_x != 0)
+            {
+                kingAttackersquare.Add(squares[king_row + attacker_direction_x, king_column + attacker_direction_y]);
+                attacker_direction_x = attacker_direction_x + 1;
+                attacker_direction_y = attacker_direction_y + 1;
+            }
+        }
+        //vasakul
+        if (attacker_direction_x < 0 && attacker_direction_y == 0)
+        {
+            while (attacker_direction_x != 0)
+            {
+                kingAttackersquare.Add(squares[king_row + attacker_direction_x, king_column + attacker_direction_y]);
+                attacker_direction_x = attacker_direction_x + 1;
+            }
+        }
+        //yleval vasakul
+        if (attacker_direction_x < 0 && attacker_direction_y > 0)
+        {
+            while (attacker_direction_x != 0)
+            {
+                kingAttackersquare.Add(squares[king_row + attacker_direction_x, king_column + attacker_direction_y]);
+                attacker_direction_x = attacker_direction_x + 1;
+                attacker_direction_y = attacker_direction_y - 1;
+            }
+        }
+        //yleval
+        if (attacker_direction_x == 0 && attacker_direction_y > 0)
+        {
+            while (attacker_direction_y != 0)
+            {
+                kingAttackersquare.Add(squares[king_row + attacker_direction_x, king_column + attacker_direction_y]);
+                attacker_direction_y = attacker_direction_y - 1;
+            }
+        }
+        //yleval paremal
+        if (attacker_direction_x > 0 && attacker_direction_y > 0)
+        {
+            while (attacker_direction_x != 0)
+            {
+                kingAttackersquare.Add(squares[king_row + attacker_direction_x, king_column + attacker_direction_y]);
+                attacker_direction_x = attacker_direction_x - 1;
+                attacker_direction_y = attacker_direction_y - 1;
+            }
+        }
+        //paremal
+        if (attacker_direction_x > 0 && attacker_direction_y == 0)
+        {
+            while (attacker_direction_x != 0)
+            {
+                kingAttackersquare.Add(squares[king_row + attacker_direction_x, king_column + attacker_direction_y]);
+                attacker_direction_x = attacker_direction_x - 1;
+            }
+        }
+        //all paremal
+        if (attacker_direction_x > 0 && attacker_direction_y < 0)
+        {
+            while (attacker_direction_y != 0)
+            {
+                kingAttackersquare.Add(squares[king_row + attacker_direction_x, king_column + attacker_direction_y]);
+                attacker_direction_x = attacker_direction_x - 1;
+                attacker_direction_y = attacker_direction_y + 1;
+            }
+        }
+        //all
+        if (attacker_direction_x == 0 && attacker_direction_y < 0)
+        {
+            while (attacker_direction_y != 0)
+            {
+                kingAttackersquare.Add(squares[king_row + attacker_direction_x, king_column + attacker_direction_y]);
+                attacker_direction_y = attacker_direction_y + 1;
+            }
+        }
+        //hobune
+        if(kingAttacker.PieceNumber == 2)
+        {
+            kingAttackersquare.Add(kingAttacker.currentSquare);
+        }
+
+        foreach (Square attacker_square in kingAttackersquare)
+        {
+            Debug.Log("Attacker square: " + attacker_square.ReturnSquare());
+        }
+    }
+    private List<Square> kingDefenderMoves(Piece CurrentPiece)
+    {
+        List<Square> king_defender_square = new List<Square>();
+        //Pawn
+        if (CurrentPiece.PieceNumber == 0)
+        {
+            List<Square> pawn_squares = PawnMoves(CurrentPiece);
+            List<Square> pawn_attack_squares = PawnAttackMoves(CurrentPiece);
+            //Kui saab ette astuda
+            for (int index = 0; index < pawn_squares.Count; ++index)
+            {
+                foreach (Square attacker_Square in kingAttackersquare)
+                {
+                    if (pawn_squares[index] == attacker_Square)
+                    {
+                        king_defender_square.Add(attacker_Square);
+                    }
+                }
+            }
+            //kui saab syya
+            for (int index = 0; index < pawn_attack_squares.Count; ++index)
+            {
+                foreach (Piece king_attacker in kingAttackers)
+                {
+                    if (pawn_attack_squares[index] == king_attacker.currentSquare)
+                    {
+                        king_defender_square.Add(king_attacker.currentSquare);
+                    }
+                }
+            }
+        }
+        //Rook
+        if (CurrentPiece.PieceNumber == 1)
+        {
+            List<Square> rook_squares = RookMoves(CurrentPiece);
+            for (int index = 0; index < rook_squares.Count; ++index)
+            {
+                foreach (Square attacker_Square in kingAttackersquare)
+                {
+                    if (rook_squares[index] == attacker_Square)
+                    {
+                        king_defender_square.Add(attacker_Square);
+                    }
+                }
+            }
+        }
+        //Horse
+        if (CurrentPiece.PieceNumber == 2)
+        {
+            List<Square> horse_squares = HorseMoves(CurrentPiece);
+            for (int index = 0; index < horse_squares.Count; ++index)
+            {
+                foreach (Square attacker_Square in kingAttackersquare)
+                {
+                    if (horse_squares[index] == attacker_Square)
+                    {
+                        king_defender_square.Add(attacker_Square);
+                    }
+                }
+            }
+        }
+        //Bishop
+        if (CurrentPiece.PieceNumber == 3)
+        {
+            List<Square> bishop_squares = BishopMoves(CurrentPiece);
+            for (int index = 0; index < bishop_squares.Count; ++index)
+            {
+                foreach (Square attacker_Square in kingAttackersquare)
+                {
+                    if (bishop_squares[index] == attacker_Square)
+                    {
+                        king_defender_square.Add(attacker_Square);
+                    }
+                }
+            }
+        }
+        //Queen
+        if (CurrentPiece.PieceNumber == 4)
+        {
+            List<Square> queen_squares = QueenMoves(CurrentPiece);
+            for (int index = 0; index < queen_squares.Count; ++index)
+            {
+                foreach (Square attacker_Square in kingAttackersquare)
+                {
+                    if (queen_squares[index] == attacker_Square)
+                    {
+                        king_defender_square.Add(attacker_Square);
+                    }
+                }
+            }
+        }
+
+        return king_defender_square;
     }
     private List<Square> PawnMoves(Piece CurrentPiece)
     {
@@ -447,22 +659,22 @@ public class Board : MonoBehaviour
         {
             PawnMovesList.Add(squares[row, column + direction]);
 
-            if (column == 1 && CurrentPiece.PieceColor == 'w')
+            if (column == 1 && CurrentPiece.PieceColor == 'w' && !CheckForEnemy(CurrentPiece, row, column + direction * 2))
             {
                 PawnMovesList.Add(squares[row, column + direction * 2]);
             }
-            if (column == 6 && CurrentPiece.PieceColor == 'b')
+            if (column == 6 && CurrentPiece.PieceColor == 'b' && !CheckForEnemy(CurrentPiece, row, column + direction * 2))
             {
                 PawnMovesList.Add(squares[row, column + direction * 2]);
             }
-            if (CheckForEnemy(CurrentPiece, (row + 1), (column + direction)))
-            {
-                PawnMovesList.Add(squares[(row + 1), (column + direction)]);
-            }
-            if (CheckForEnemy(CurrentPiece, (row - 1), (column + direction)))
-            {
-                PawnMovesList.Add(squares[(row - 1), (column + direction)]);
-            }
+        }
+        if (CheckForEnemy(CurrentPiece, (row + 1), (column + direction)))
+        {
+            PawnMovesList.Add(squares[(row + 1), (column + direction)]);
+        }
+        if (CheckForEnemy(CurrentPiece, (row - 1), (column + direction)))
+        {
+            PawnMovesList.Add(squares[(row - 1), (column + direction)]);
         }
 
         return PawnMovesList;
@@ -498,7 +710,7 @@ public class Board : MonoBehaviour
             else
             {
                 if (WithinBounds(row + i, column))
-                    EnemyAvailableMoves.Add(squares[row + i, column]);
+                    enemyAvailableMoves.Add(squares[row + i, column]);
                 break;
             }
             if (CheckForEnemy(CurrentPiece, row + i, column))
@@ -511,7 +723,7 @@ public class Board : MonoBehaviour
             else
             {
                 if(WithinBounds(row - i, column))
-                    EnemyAvailableMoves.Add(squares[row - i, column]);
+                    enemyAvailableMoves.Add(squares[row - i, column]);
 
                 break;
             }
@@ -525,10 +737,10 @@ public class Board : MonoBehaviour
             else
             {
                 if (WithinBounds(row, column + i))
-                    EnemyAvailableMoves.Add(squares[row, column + i]);
+                    enemyAvailableMoves.Add(squares[row, column + i]);
                 break;
             }
-            if (CheckForEnemy(CurrentPiece, row + i, column + i))
+            if (CheckForEnemy(CurrentPiece, row , column + i))
                 break;
         }
         for (int i = 1; i < 8; ++i)
@@ -538,7 +750,7 @@ public class Board : MonoBehaviour
             else
             {
                 if (WithinBounds(row, column - i))
-                    EnemyAvailableMoves.Add(squares[row, column-i]);
+                    enemyAvailableMoves.Add(squares[row, column-i]);
                 break;
             }
             if (CheckForEnemy(CurrentPiece, row, column - i))
@@ -558,49 +770,49 @@ public class Board : MonoBehaviour
             HorseMovesList.Add(squares[row + 2, column + 1]);
         else
             if (WithinBounds(row + 2, column + 1))
-                EnemyAvailableMoves.Add(squares[row + 2, column + 1]);
+                enemyAvailableMoves.Add(squares[row + 2, column + 1]);
 
         if (IsLegalMove(CurrentPiece, row + 1, column + 2))
             HorseMovesList.Add(squares[row + 1, column + 2]);
         else
             if (WithinBounds(row + 1, column + 2))
-            EnemyAvailableMoves.Add(squares[row + 1, column + 2]);
+            enemyAvailableMoves.Add(squares[row + 1, column + 2]);
 
         if (IsLegalMove(CurrentPiece, row - 1, column + 2))
             HorseMovesList.Add(squares[row - 1, column + 2]);
         else
             if (WithinBounds(row- 1, column + 2))
-            EnemyAvailableMoves.Add(squares[row - 1, column + 2]);
+            enemyAvailableMoves.Add(squares[row - 1, column + 2]);
 
         if (IsLegalMove(CurrentPiece, row - 2, column + 1))
             HorseMovesList.Add(squares[row - 2, column + 1]);
         else
             if (WithinBounds(row - 2, column + 1))
-            EnemyAvailableMoves.Add(squares[row - 2, column + 1]);
+            enemyAvailableMoves.Add(squares[row - 2, column + 1]);
 
         if (IsLegalMove(CurrentPiece, row - 2, column - 1))
             HorseMovesList.Add(squares[row - 2, column - 1]);
         else
             if (WithinBounds(row - 2, column - 1))
-            EnemyAvailableMoves.Add(squares[row - 2, column - 1]);
+            enemyAvailableMoves.Add(squares[row - 2, column - 1]);
 
         if (IsLegalMove(CurrentPiece, row - 1, column - 2))
             HorseMovesList.Add(squares[row - 1, column - 2]);
         else
             if (WithinBounds(row - 1, column - 2))
-            EnemyAvailableMoves.Add(squares[row - 1, column - 2]);
+            enemyAvailableMoves.Add(squares[row - 1, column - 2]);
 
         if (IsLegalMove(CurrentPiece, row + 1, column - 2))
             HorseMovesList.Add(squares[row + 1, column - 2]);
         else
             if (WithinBounds(row + 1, column - 2))
-            EnemyAvailableMoves.Add(squares[row + 1, column - 2]);
+            enemyAvailableMoves.Add(squares[row + 1, column - 2]);
 
         if (IsLegalMove(CurrentPiece, row + 2, column - 1))
             HorseMovesList.Add(squares[row + 2, column - 1]);
         else
             if (WithinBounds(row + 2, column - 1))
-            EnemyAvailableMoves.Add(squares[row + 2, column - 1]);
+            enemyAvailableMoves.Add(squares[row + 2, column - 1]);
 
         return HorseMovesList;
     }
@@ -618,7 +830,7 @@ public class Board : MonoBehaviour
             else
             {
                 if (WithinBounds(row + i, column + i))
-                    EnemyAvailableMoves.Add(squares[row + i, column + i]);
+                    enemyAvailableMoves.Add(squares[row + i, column + i]);
                 break;
             }
             if (CheckForEnemy(CurrentPiece, row + i, column + i))
@@ -631,7 +843,7 @@ public class Board : MonoBehaviour
             else
             {
                 if (WithinBounds(row + i, column - i))
-                    EnemyAvailableMoves.Add(squares[row + i, column - i]);
+                    enemyAvailableMoves.Add(squares[row + i, column - i]);
                 break;
             }
             if (CheckForEnemy(CurrentPiece, + i, column - i))
@@ -644,7 +856,7 @@ public class Board : MonoBehaviour
             else
             {
                 if (WithinBounds(row - i, column - i))
-                    EnemyAvailableMoves.Add(squares[row - i, column - i]);
+                    enemyAvailableMoves.Add(squares[row - i, column - i]);
                 break;
             }
             if (CheckForEnemy(CurrentPiece, row - i, column - i))
@@ -657,7 +869,7 @@ public class Board : MonoBehaviour
             else
             {
                 if (WithinBounds(row - i, column + i))
-                    EnemyAvailableMoves.Add(squares[row - i, column + i]);
+                    enemyAvailableMoves.Add(squares[row - i, column + i]);
                 break;
             }
             if (CheckForEnemy(CurrentPiece, row - i, column + i))
@@ -680,7 +892,7 @@ public class Board : MonoBehaviour
             else
             {
                 if (WithinBounds(row + i, column + i))
-                    EnemyAvailableMoves.Add(squares[row + i, column + i]);
+                    enemyAvailableMoves.Add(squares[row + i, column + i]);
                 break;
             }
             if (CheckForEnemy(CurrentPiece, row + i, column + i))
@@ -693,7 +905,7 @@ public class Board : MonoBehaviour
             else
             {
                 if (WithinBounds(row + i, column - i))
-                    EnemyAvailableMoves.Add(squares[row + i, column - i]);
+                    enemyAvailableMoves.Add(squares[row + i, column - i]);
                 break;
             }
             if (CheckForEnemy(CurrentPiece, +i, column - i))
@@ -706,7 +918,7 @@ public class Board : MonoBehaviour
             else
             {
                 if (WithinBounds(row - i, column - i))
-                    EnemyAvailableMoves.Add(squares[row - i, column - i]);
+                    enemyAvailableMoves.Add(squares[row - i, column - i]);
                 break;
             }
             if (CheckForEnemy(CurrentPiece, row - i, column - i))
@@ -719,7 +931,7 @@ public class Board : MonoBehaviour
             else
             {
                 if (WithinBounds(row - i, column + i))
-                    EnemyAvailableMoves.Add(squares[row - i, column + i]);
+                    enemyAvailableMoves.Add(squares[row - i, column + i]);
                 break;
             }
             if (CheckForEnemy(CurrentPiece, row - i, column + i))
@@ -732,7 +944,7 @@ public class Board : MonoBehaviour
             else
             {
                 if (WithinBounds(row + i, column))
-                    EnemyAvailableMoves.Add(squares[row + i, column]);
+                    enemyAvailableMoves.Add(squares[row + i, column]);
                 break;
             }
             if (CheckForEnemy(CurrentPiece, row + i, column))
@@ -745,7 +957,7 @@ public class Board : MonoBehaviour
             else
             {
                 if (WithinBounds(row - i, column))
-                    EnemyAvailableMoves.Add(squares[row - i, column]);
+                    enemyAvailableMoves.Add(squares[row - i, column]);
 
                 break;
             }
@@ -759,10 +971,10 @@ public class Board : MonoBehaviour
             else
             {
                 if (WithinBounds(row, column + i))
-                    EnemyAvailableMoves.Add(squares[row, column + i]);
+                    enemyAvailableMoves.Add(squares[row, column + i]);
                 break;
             }
-            if (CheckForEnemy(CurrentPiece, row + i, column + i))
+            if (CheckForEnemy(CurrentPiece, row, column + i))
                 break;
         }
         for (int i = 1; i < 8; ++i)
@@ -772,7 +984,7 @@ public class Board : MonoBehaviour
             else
             {
                 if (WithinBounds(row, column - i))
-                    EnemyAvailableMoves.Add(squares[row, column - i]);
+                    enemyAvailableMoves.Add(squares[row, column - i]);
                 break;
             }
             if (CheckForEnemy(CurrentPiece, row, column - i))
@@ -792,131 +1004,139 @@ public class Board : MonoBehaviour
             KingMovesList.Add(squares[row + 1, column]);
         else
             if (WithinBounds(row + 1, column))
-            EnemyAvailableMoves.Add(squares[row + 1, column]);
+            enemyAvailableMoves.Add(squares[row + 1, column]);
 
         if (IsLegalMove(CurrentPiece, row + 1, column - 1))
             KingMovesList.Add(squares[row + 1, column - 1]);
         else
             if (WithinBounds(row + 1, column - 1))
-            EnemyAvailableMoves.Add(squares[row + 1, column - 1]);
+            enemyAvailableMoves.Add(squares[row + 1, column - 1]);
 
         if (IsLegalMove(CurrentPiece, row + 1, column + 1))
             KingMovesList.Add(squares[row + 1, column + 1]);
         else
             if (WithinBounds(row + 1, column + 1))
-            EnemyAvailableMoves.Add(squares[row + 1, column + 1]);
+            enemyAvailableMoves.Add(squares[row + 1, column + 1]);
 
         if (IsLegalMove(CurrentPiece, row, column - 1))
             KingMovesList.Add(squares[row, column - 1]);
         else
             if (WithinBounds(row , column - 1))
-            EnemyAvailableMoves.Add(squares[row, column - 1]);
+            enemyAvailableMoves.Add(squares[row, column - 1]);
 
         if (IsLegalMove(CurrentPiece, row, column + 1))
             KingMovesList.Add(squares[row, column + 1]);
         else
             if (WithinBounds(row , column + 1))
-            EnemyAvailableMoves.Add(squares[row , column + 1]);
+            enemyAvailableMoves.Add(squares[row , column + 1]);
 
         if (IsLegalMove(CurrentPiece, row - 1, column - 1))
             KingMovesList.Add(squares[row - 1, column - 1]);
         else
             if (WithinBounds(row - 1, column - 1))
-            EnemyAvailableMoves.Add(squares[row - 1, column - 1]);
+            enemyAvailableMoves.Add(squares[row - 1, column - 1]);
 
         if (IsLegalMove(CurrentPiece, row - 1, column))
             KingMovesList.Add(squares[row - 1, column]);
         else
             if (WithinBounds(row - 1, column))
-            EnemyAvailableMoves.Add(squares[row - 1, column]);
+            enemyAvailableMoves.Add(squares[row - 1, column]);
 
         if (IsLegalMove(CurrentPiece, row - 1, column + 1))
             KingMovesList.Add(squares[row - 1, column + 1]);
         else
             if (WithinBounds(row - 1, column + 1))
-            EnemyAvailableMoves.Add(squares[row - 1, column + 1]);
+            enemyAvailableMoves.Add(squares[row - 1, column + 1]);
 
         return KingMovesList;
     }
-    private void CheckForChecks()
+    private void checkForKingAttackers()
     {
         //single check : can king move? can king take attacker? can any piece block kingattacker or take it?
         //double check : can king move or take attacker(s)?
-        foreach (Square kaka in EnemyAvailableMoves)
+        foreach (Square kaka in enemyAvailableMoves)
         {
             kaka.TransparentSquare();
         }
 
-        KingAttackers.Clear();
-        EnemyAvailableMoves.Clear();
+        kingAttackers.Clear();
+        enemyAvailableMoves.Clear();
 
         if (turn_counter % 2 == 0)
         {
-            for (int i = 0; i < BlackPieces.Length; ++i)
+            for (int i = 0; i < blackPieces.Length; ++i)
             {
-                if(BlackPieces[i].PieceActive)
-                    EnemyMovesList(BlackPieces[i]);
+                if(blackPieces[i].PieceActive)
+                    EnemyMovesList(blackPieces[i]);
             }
-            foreach (Square EnemyMoves in EnemyAvailableMoves)
+            foreach (Square EnemyMoves in enemyAvailableMoves)
             {
-                if (EnemyMoves == WhitePieces[12].currentSquare)
+                if (EnemyMoves == whitePieces[12].currentSquare)
                 {
-                    if(KingAttackers.Count > 1)
-                    {
-
-                    }
+                    check = true;
+                    //teeb attackerite movedest listi
+                    kingAttackerMoves(kingAttackers[0], whitePieces[12]);
                 }
             }
         }
 
         if (turn_counter % 2 != 0)
         {
-            for (int i = 0; i < WhitePieces.Length; ++i)
+            for (int i = 0; i < whitePieces.Length; ++i)
             {
-                if (WhitePieces[i].PieceActive)
-                    EnemyMovesList(WhitePieces[i]);
+                if (whitePieces[i].PieceActive)
+                    EnemyMovesList(whitePieces[i]);
+            }
+            foreach (Square EnemyMoves in enemyAvailableMoves)
+            {
+                if (EnemyMoves == blackPieces[12].currentSquare)
+                {
+                    check = true;
+                    //teeb attackerite movedest listi
+                    kingAttackerMoves(kingAttackers[0], whitePieces[12]);
+                }
             }
         }
-        foreach (Square kaka in EnemyAvailableMoves)
+        if (kingAttackers.Count == 0)
         {
-            //kaka.HighlightSquare();
+            check = false;
         }
     }
     //Special Moves
     private void CheckForCastle()
     {
-        if (WhitePieces[12].CastleTime)
+        if (whitePieces[12].CastleTime)
         {
-            if (WhitePieces[12].currentSquare == squares[0, 6])
+            if (whitePieces[12].currentSquare == squares[0, 6])
             {
-                WhitePieces[12].CastleTime = false;
-                WhitePieces[15].transform.position = squares[0, 5].transform.position;
-                WhitePieces[15].currentSquare = squares[0, 5];
-                WhitePieces[15].PieceHasMoved = true;
+                whitePieces[12].CastleTime = false;
+                whitePieces[15].transform.position = squares[0, 5].transform.position;
+                whitePieces[15].currentSquare = squares[0, 5];
+                whitePieces[15].PieceHasMoved = true;
             }
-            if (WhitePieces[12].currentSquare == squares[0, 2])
+            if (whitePieces[12].currentSquare == squares[0, 2])
             {
-                WhitePieces[12].CastleTime = false;
-                WhitePieces[8].transform.position = squares[0, 3].transform.position;
-                WhitePieces[8].currentSquare = squares[0, 3];
-                WhitePieces[8].PieceHasMoved = true;
+                whitePieces[12].CastleTime = false;
+                whitePieces[8].transform.position = squares[0, 3].transform.position;
+                whitePieces[8].currentSquare = squares[0, 3];
+                whitePieces[8].PieceHasMoved = true;
             }
         }
-        if (BlackPieces[12].CastleTime)
+        if (blackPieces[12].CastleTime)
         {
-            if (BlackPieces[12].currentSquare == squares[7, 6])
+            if (blackPieces[12].currentSquare == squares[7, 6])
             {
-                BlackPieces[12].CastleTime = false;
-                BlackPieces[15].transform.position = squares[7, 5].transform.position;
-                BlackPieces[15].currentSquare = squares[7, 5];
-                BlackPieces[15].PieceHasMoved = true;
+                blackPieces[12].CastleTime = false;
+                blackPieces[15].transform.position = squares[7, 5].transform.position;
+                blackPieces[15].currentSquare = squares[7, 5];
+                blackPieces[15].PieceHasMoved = true;
             }
-            if (BlackPieces[12].currentSquare == squares[7, 2])
+            if (blackPieces[12].currentSquare == squares[7, 2])
             {
-                BlackPieces[12].CastleTime = false;
-                BlackPieces[8].transform.position = squares[7, 3].transform.position;
-                BlackPieces[8].currentSquare = squares[7, 3];
-                BlackPieces[8].PieceHasMoved = true;
+                blackPieces[12].CastleTime = false;
+                blackPieces[8].transform.position = squares[7, 3].transform.position;
+                blackPieces[8].currentSquare = squares[7, 3];
+                blackPieces[8].PieceHasMoved = true;
             }
         }
     }
@@ -924,25 +1144,25 @@ public class Board : MonoBehaviour
     {
         for(int i = 0; i < 8; ++i)
         {
-            if(WhitePieces[i].PawnTransform)
+            if(whitePieces[i].PawnTransform)
             {
                 Square PawnTransformSquare;
 
-                WhitePieces[i].PawnTransform = false;
-                PawnTransformSquare = WhitePieces[i].currentSquare;
-                WhitePieces[i].gameObject.SetActive(false);
-                WhitePieces[i] = Instantiate(WhitePiecePrefab[4], WhitePieces[i].transform.position, Quaternion.identity);
-                WhitePieces[i].currentSquare = PawnTransformSquare;
+                whitePieces[i].PawnTransform = false;
+                PawnTransformSquare = whitePieces[i].currentSquare;
+                whitePieces[i].gameObject.SetActive(false);
+                whitePieces[i] = Instantiate(whitePiecePrefab[4], whitePieces[i].transform.position, Quaternion.identity);
+                whitePieces[i].currentSquare = PawnTransformSquare;
             }
-            if (BlackPieces[i].PawnTransform)
+            if (blackPieces[i].PawnTransform)
             {
                 Square PawnTransformSquare;
 
-                BlackPieces[i].PawnTransform = false;
-                PawnTransformSquare = BlackPieces[i].currentSquare;
-                BlackPieces[i].gameObject.SetActive(false);
-                BlackPieces[i] = Instantiate(BlackPiecePrefab[4], BlackPieces[i].transform.position, Quaternion.identity);
-                BlackPieces[i].currentSquare = PawnTransformSquare;
+                blackPieces[i].PawnTransform = false;
+                PawnTransformSquare = blackPieces[i].currentSquare;
+                blackPieces[i].gameObject.SetActive(false);
+                blackPieces[i] = Instantiate(blackPiecePrefab[4], blackPieces[i].transform.position, Quaternion.identity);
+                blackPieces[i].currentSquare = PawnTransformSquare;
             }
         }
     } 
