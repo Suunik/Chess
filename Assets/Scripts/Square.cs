@@ -10,6 +10,8 @@ public class Square : MonoBehaviour
     private SpriteRenderer spriterenderer;
     private Color SquareColor;
     public Sprite EnemyOnSquare;
+    
+    public int team;
 
     public Rect rect;
 

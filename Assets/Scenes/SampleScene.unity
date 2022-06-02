@@ -301,25 +301,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 1089226273}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 466e252373e46e248a5d5d95b475bf45, type: 3}
+  m_Script: {fileID: 11500000, guid: d118509e02a67394ab70ed999b611326, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  squarePrefab: {fileID: 8323093709090922554, guid: 248a3f8685466fc4a934998f4e083ce3, type: 3}
-  availableMoves: []
   whitePiecePrefab:
-  - {fileID: -8988769534560225599, guid: 67293b88e7257ca4695e18e558f76dec, type: 3}
-  - {fileID: -3178664806156319586, guid: 5dfd59d777687c34d8f4d763f59859dd, type: 3}
-  - {fileID: 6546965698461470023, guid: 0c92637eb650f9640812775c736848cd, type: 3}
-  - {fileID: -3686527680042829533, guid: d4a5ef2500437e94e8f5ff8892e3211c, type: 3}
-  - {fileID: -5888210987244486451, guid: 31a4c285add976a4294e3948d781b886, type: 3}
-  - {fileID: -2518495475470759048, guid: 9a00fb8c79b71c743aad2b20c4311350, type: 3}
+  - {fileID: -4841314427680990500, guid: 67293b88e7257ca4695e18e558f76dec, type: 3}
+  - {fileID: 6438969968164384872, guid: 5dfd59d777687c34d8f4d763f59859dd, type: 3}
+  - {fileID: 584956237470642569, guid: 0c92637eb650f9640812775c736848cd, type: 3}
+  - {fileID: 6149663493467787785, guid: d4a5ef2500437e94e8f5ff8892e3211c, type: 3}
+  - {fileID: 6526823246153773554, guid: 31a4c285add976a4294e3948d781b886, type: 3}
+  - {fileID: 5439302140517718489, guid: 9a00fb8c79b71c743aad2b20c4311350, type: 3}
   blackPiecePrefab:
-  - {fileID: -2844528165842679694, guid: 8a9952992da664d49816ee536ace089e, type: 3}
-  - {fileID: 6492924973486516233, guid: 59e70f667d859d5469be54208fb46be6, type: 3}
-  - {fileID: -8740587796282372420, guid: dd189dfd62b4f7c42a61108a29f7b724, type: 3}
-  - {fileID: -4350391781770922316, guid: 52507acbeaea4454c82a6ee42002d97d, type: 3}
-  - {fileID: -2877497978406357955, guid: 1fa61b8afc0b5b842a922fcc3d921b5e, type: 3}
-  - {fileID: -6502781876459623138, guid: 83d28e8f8a308284ea309df6a3908f81, type: 3}
-  turn_counter: 0
-  turn_flag: 0
-  enPassantCheck: 0
+  - {fileID: 1438040917356128334, guid: 8a9952992da664d49816ee536ace089e, type: 3}
+  - {fileID: 4068460712069340405, guid: 59e70f667d859d5469be54208fb46be6, type: 3}
+  - {fileID: 2788051736745813553, guid: dd189dfd62b4f7c42a61108a29f7b724, type: 3}
+  - {fileID: 4696652272996468063, guid: 52507acbeaea4454c82a6ee42002d97d, type: 3}
+  - {fileID: 3403793190287374700, guid: 1fa61b8afc0b5b842a922fcc3d921b5e, type: 3}
+  - {fileID: 2451919448347802767, guid: 83d28e8f8a308284ea309df6a3908f81, type: 3}
+  squarePrefab: {fileID: 8323093709090922554, guid: 248a3f8685466fc4a934998f4e083ce3, type: 3}
