@@ -32,11 +32,18 @@ public class Rook : ChessPiece
                     //Must be enemy
                     else
                     {
-                        availableMoves.Add(Chessboard.instance.squares[row + i, column]);
+                        if (!availableMoves.Contains(Chessboard.instance.squares[row + i, column]))
+                        {
+                            availableMoves.Add(Chessboard.instance.squares[row + i, column]);
+                        }
                         break;
                     }
                 }
-                availableMoves.Add(Chessboard.instance.squares[row + i, column]);
+                if (!availableMoves.Contains(Chessboard.instance.squares[row + i, column]))
+                {
+                    availableMoves.Add(Chessboard.instance.squares[row + i, column]);
+                }
+                
             }    
         }
 
@@ -57,11 +64,17 @@ public class Rook : ChessPiece
                     //Must be enemy
                     else
                     {
-                        availableMoves.Add(Chessboard.instance.squares[row + i, column]);
+                        if (!availableMoves.Contains(Chessboard.instance.squares[row + i, column]))
+                        {
+                            availableMoves.Add(Chessboard.instance.squares[row + i, column]);
+                        }
                         break;
                     }
                 }
-                availableMoves.Add(Chessboard.instance.squares[row + i, column]);
+                if (!availableMoves.Contains(Chessboard.instance.squares[row + i, column]))
+                {
+                    availableMoves.Add(Chessboard.instance.squares[row + i, column]);
+                }
             }
         }
 
@@ -82,11 +95,17 @@ public class Rook : ChessPiece
                     //Must be enemy
                     else
                     {
-                        availableMoves.Add(Chessboard.instance.squares[row, column + i]);
+                        if (!availableMoves.Contains(Chessboard.instance.squares[row, column + i]))
+                        {
+                            availableMoves.Add(Chessboard.instance.squares[row, column + i]);
+                        }
                         break;
                     }
                 }
-                availableMoves.Add(Chessboard.instance.squares[row, column + i]);
+                if (!availableMoves.Contains(Chessboard.instance.squares[row, column+i]))
+                {
+                    availableMoves.Add(Chessboard.instance.squares[row, column+i]);
+                }
             }
         }
 
@@ -107,11 +126,17 @@ public class Rook : ChessPiece
                     //Must be enemy
                     else
                     {
-                        availableMoves.Add(Chessboard.instance.squares[row, column + i]);
+                        if (!availableMoves.Contains(Chessboard.instance.squares[row, column + i]))
+                        {
+                            availableMoves.Add(Chessboard.instance.squares[row, column + i]);
+                        }
                         break;
                     }
                 }
-                availableMoves.Add(Chessboard.instance.squares[row, column + i]);
+                if (!availableMoves.Contains(Chessboard.instance.squares[row, column + i]))
+                {
+                    availableMoves.Add(Chessboard.instance.squares[row, column + i]);
+                }
             }
         }
     }

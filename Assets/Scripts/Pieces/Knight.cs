@@ -21,7 +21,10 @@ public class Knight : ChessPiece
             {
                 if (Chessboard.instance.squares[row + movementMatrix[i, 0], column + movementMatrix[i, 1]].team != team)
                 {
-                    availableMoves.Add(Chessboard.instance.squares[row + movementMatrix[i, 0], column + movementMatrix[i, 1]]);
+                    if (!availableMoves.Contains(Chessboard.instance.squares[row + movementMatrix[i, 0], column + movementMatrix[i, 1]]))
+                    {
+                        availableMoves.Add(Chessboard.instance.squares[row + movementMatrix[i, 0], column + movementMatrix[i, 1]]);
+                    }
                 }
                 
             }
