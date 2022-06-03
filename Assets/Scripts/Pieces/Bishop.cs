@@ -4,16 +4,144 @@ using UnityEngine;
 
 public class Bishop : ChessPiece
 {
-    private int PieceNumber = 3;
-
-    public override void allInBoundsMoves()
+    public override void findAllInboundsAndNoCollisionMoves()
     {
-        throw new System.NotImplementedException();
+        int row = ReturnRowColumn()[0];
+        int column = ReturnRowColumn()[1];
+
+        //to the right and down
+        for (int i = 1; i < 8; ++i)
+        {   
+            //Is the tile within the borders of the game
+            if (WithinBounds(row - i, column + i))
+            {
+                //If team, then break. If enemy, then add and break.
+                if (Chessboard.instance.squares[row - i, column + i].team != 0)
+                {   
+                    //Its your team
+                    if (Chessboard.instance.squares[row - i, column + i].team == team)
+                    {
+                        break;
+                    }
+                    //Must be enemy
+                    else
+                    {
+                        if (!availableMoves.Contains(Chessboard.instance.squares[row - i, column + i]))
+                        {
+                            availableMoves.Add(Chessboard.instance.squares[row - i, column + i]);
+                        }
+                        break;
+                    }
+                }
+                if (!availableMoves.Contains(Chessboard.instance.squares[row - i, column + i]))
+                {
+                    availableMoves.Add(Chessboard.instance.squares[row - i, column + i]);
+                }
+                
+            }    
+        }
+
+        //To the left and up
+        for (int i = -1; i > -8; --i)
+        {
+            //Is the tile within the borders of the game
+            if (WithinBounds(row - i, column + i))
+            {
+                //If team, then break. If enemy, then add and break.
+                if (Chessboard.instance.squares[row - i, column + i].team != 0)
+                {
+                    //Its your team
+                    if (Chessboard.instance.squares[row - i, column + i].team == team)
+                    {
+                        break;
+                    }
+                    //Must be enemy
+                    else
+                    {
+                        if (!availableMoves.Contains(Chessboard.instance.squares[row - i, column + i]))
+                        {
+                            availableMoves.Add(Chessboard.instance.squares[row - i, column + i]);
+                        }
+                        break;
+                    }
+                }
+                if (!availableMoves.Contains(Chessboard.instance.squares[row - i, column + i]))
+                {
+                    availableMoves.Add(Chessboard.instance.squares[row - i, column + i]);
+                }
+            }
+        }
+
+        //To the right and up
+        for (int i = 1; i < 8; ++i)
+        {
+            //Is the tile within the borders of the game
+            if (WithinBounds(row + i, column + i))
+            {
+                //If team, then break. If enemy, then add and break.
+                if (Chessboard.instance.squares[row + i, column + i].team != 0)
+                {
+                    //Its your team
+                    if (Chessboard.instance.squares[row + i, column + i].team == team)
+                    {
+                        break;
+                    }
+                    //Must be enemy
+                    else
+                    {
+                        if (!availableMoves.Contains(Chessboard.instance.squares[row + i, column + i]))
+                        {
+                            availableMoves.Add(Chessboard.instance.squares[row + i, column + i]);
+                        }
+                        break;
+                    }
+                }
+                if (!availableMoves.Contains(Chessboard.instance.squares[row + i, column+i]))
+                {
+                    availableMoves.Add(Chessboard.instance.squares[row + i, column+i]);
+                }
+            }
+        }
+
+        //To the left and down
+        for (int i = -1; i > -8; --i)
+        {
+            //Is the tile within the borders of the game
+            if (WithinBounds(row + i, column + i))
+            {
+                //If team, then break. If enemy, then add and break.
+                if (Chessboard.instance.squares[row + i, column + i].team != 0)
+                {
+                    //Its your team
+                    if (Chessboard.instance.squares[row + i, column + i].team == team)
+                    {
+                        break;
+                    }
+                    //Must be enemy
+                    else
+                    {
+                        if (!availableMoves.Contains(Chessboard.instance.squares[row + i, column + i]))
+                        {
+                            availableMoves.Add(Chessboard.instance.squares[row + i, column + i]);
+                        }
+                        break;
+                    }
+                }
+                if (!availableMoves.Contains(Chessboard.instance.squares[row + i, column + i]))
+                {
+                    availableMoves.Add(Chessboard.instance.squares[row + i, column + i]);
+                }
+            }
+        }
     }
 
-    public override void FindAvailableMoves()
+    public override List<Square> FindAvailableMoves()
     {
-        throw new System.NotImplementedException();
+        findAllInboundsAndNoCollisionMoves();
+        return availableMoves;
     }
+    public override void restrictMovements()
+    {
 
+    }
 }

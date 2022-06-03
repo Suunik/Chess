@@ -12,11 +12,17 @@ public class Chessboard : MonoBehaviour
     //Piece array for chessboard
     public ChessPiece[] whitePieces = new ChessPiece[16];
     public ChessPiece[] blackPieces = new ChessPiece[16];
+    public List<Square> allWhiteMoves = null;
+    public List<Square> allBlackMoves = null;
+
     //For piece sprites
     public ChessPiece[] whitePiecePrefab = new ChessPiece[6];
     public ChessPiece[] blackPiecePrefab = new ChessPiece[6];
 
     public Square squarePrefab;
+
+    public int turnCounter = 1;
+    public int previousTurnCounter = 0;
     // Start is called before the first frame update
     void Start()
     {
@@ -35,6 +41,43 @@ public class Chessboard : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //Calculate availablemoves for every piece once per turn
+        if (turnCounter != previousTurnCounter)
+        {
+            //This could be modified to clear all blackPiece availableMoves arrays if its white's turn and vice versa
+            foreach (ChessPiece item in whitePieces)
+            {
+                item.FindAvailableMoves();
+                item.addPieceAttackingMovesToChessboard();
+            }
+
+            foreach (ChessPiece item in blackPieces)
+            {
+                item.FindAvailableMoves();
+                item.addPieceAttackingMovesToChessboard();
+            }
+
+            //After getting all unrestricted movement arrays it is now possible to restrict movements
+            foreach (ChessPiece item in blackPieces)
+            {
+                item.restrictMovements();
+            }
+            //After getting all unrestricted movement arrays it is now possible to restrict movements
+            foreach (ChessPiece item in whitePieces)
+            {
+                item.restrictMovements();
+            }
+
+            previousTurnCounter = turnCounter;
+        }
+        foreach (ChessPiece item in whitePieces)
+        {
+            item.PieceMovement();
+        }
+        foreach (ChessPiece item in blackPieces)
+        {
+            item.PieceMovement();
+        }
 
     }
 
@@ -58,7 +101,7 @@ public class Chessboard : MonoBehaviour
         //Spawns the pawns
         for (int i = 0; i < TILE_COUNT_Y; ++i)
         {
-            //SpawnSingleWhitePiece(i, 0, 1, i);
+            SpawnSingleWhitePiece(i, 0, 1, i);
         }
         
         SpawnSingleWhitePiece(8, 1, 0, 0);
@@ -76,7 +119,7 @@ public class Chessboard : MonoBehaviour
         // Spawns the pawns
         for (int i = 0; i < TILE_COUNT_Y; ++i)
         {
-            //SpawnSingleBlackPiece(i, 0, 6, i);
+            SpawnSingleBlackPiece(i, 0, 6, i);
         }
 
         SpawnSingleBlackPiece(8, 1, 7, 0);
@@ -103,5 +146,27 @@ public class Chessboard : MonoBehaviour
         blackPieces[PieceNumber].currentSquare = squares[row, column];
         blackPieces[PieceNumber].team = -1;
         blackPieces[PieceNumber].currentSquare.team = -1;
+    }
+
+    //Finds all in bounds and no collision moves for every piece in a team
+    public List<Square> allTeamMoves(int team)
+    {
+        List<Square> result = null;
+        if (team == 1)
+        {
+            foreach (ChessPiece item in whitePieces)
+            {
+                result.AddRange(item.FindAvailableMoves());
+            }
+        }
+        else if (team == -1)
+        {
+            foreach (ChessPiece item in whitePieces)
+            {
+                result.AddRange(item.FindAvailableMoves());
+            }
+        }
+
+        return result;
     }
 }

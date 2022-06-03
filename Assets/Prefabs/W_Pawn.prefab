@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 923079902482208577}
   - component: {fileID: 5674556582799111509}
-  - component: {fileID: -4841314427680990500}
+  - component: {fileID: 4075600888481978012}
   m_Layer: 6
   m_Name: W_Pawn
   m_TagString: Untagged
@@ -85,7 +85,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &-4841314427680990500
+--- !u!114 &4075600888481978012
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,3 +98,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentSquare: {fileID: 0}
+  team: 0

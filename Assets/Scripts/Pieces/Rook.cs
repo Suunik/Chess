@@ -6,10 +6,10 @@ public class Rook : ChessPiece
 {
     Rook()
     {
-        pieceNumber = 1;
+
     }
 
-    public override void allInBoundsMoves()
+    public override void findAllInboundsAndNoCollisionMoves()
     {
 
         int row = ReturnRowColumn()[0];
@@ -140,16 +140,19 @@ public class Rook : ChessPiece
             }
         }
     }
-    public override void FindAvailableMoves()
+    public override List<Square> FindAvailableMoves()
     {
         //All possible moves + collisions
-        allInBoundsMoves();
+        findAllInboundsAndNoCollisionMoves();
+
+        return availableMoves;
 
     }
-    
-    void Update()
+
+    public override void restrictMovements()
     {
-        FindAvailableMoves();
-        PieceMovement();
+        
     }
+
+
 }

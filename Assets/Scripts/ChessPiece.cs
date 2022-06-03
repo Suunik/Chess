@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,21 +9,24 @@ public abstract class ChessPiece : MonoBehaviour
     public Square currentSquare;
     protected int[,] movementMatrix;
     protected int pieceNumber;
-    protected List<Square> availableMoves = new List<Square>();
+    public List<Square> availableMoves = new List<Square>();
 
     private Rect Hitbox;
     private bool pieceHeld;
+    protected bool firstMove;
 
     public int team;
 
     // Update is called once per frame for every ChessPiece
     void Update()
     {
-        //FindAvailableMoves();
-        //PieceMovement();
+
     }
-    public abstract void FindAvailableMoves();
-    public abstract void allInBoundsMoves();
+
+    //This is for getting all moves if there were no king restrictions
+    public abstract List<Square> FindAvailableMoves();
+    public abstract void findAllInboundsAndNoCollisionMoves();
+    public abstract void restrictMovements();
 
     public int[] ReturnRowColumn()
     {
@@ -46,12 +50,36 @@ public abstract class ChessPiece : MonoBehaviour
         return false;
     }
 
+
+    //Get no collision and in bounds tiles covered by a piece and add it to chessboard squares list
+    public virtual void addPieceAttackingMovesToChessboard()
+    {
+        for (int i = 0; i < availableMoves.Count; i++)
+        {
+
+            if (team == 1)
+            {
+                if (!Chessboard.instance.allWhiteMoves.Contains(availableMoves[i]))
+                {
+                    Chessboard.instance.allWhiteMoves.Add(availableMoves[i]);
+                }
+
+            }
+            else 
+            {
+                if (!Chessboard.instance.allBlackMoves.Contains(availableMoves[i]))
+                {
+                    Chessboard.instance.allBlackMoves.Add(availableMoves[i]);
+                }
+            }
+        }
+    }
     /*
     Every piece uses update() to check whether it has been clicked
     by calling this function. If this happens to be true, the object will follow
     the mouse location.
      */
-    protected void PieceMovement()
+    public void PieceMovement()
     {
         if (Input.GetMouseButtonDown(0))
         {
@@ -82,7 +110,6 @@ public abstract class ChessPiece : MonoBehaviour
             transform.position = mousepos;
             for (int i = 0; i < availableMoves.Count; i++)
             {
-                Debug.Log(availableMoves.Count);
                 availableMoves[i].HighlightSquare();
             }
         }
@@ -93,6 +120,13 @@ public abstract class ChessPiece : MonoBehaviour
             //salvestab hiire lahti laskmisel nupule uue ruudu
             if (pieceHeld)
             {
+                //Letting go of a piece resets all availablemoves
+                //Get rid of highlights, clear availablemoves list
+                for (int j = 0; j < availableMoves.Count; j++)
+                {
+                    availableMoves[j].TransparentSquare();
+                }
+                pieceHeld = false;
                 if (availableMoves.Count != 0)
                 {
                     //Go through all possible squares that a piece is allowed to go on
@@ -112,6 +146,12 @@ public abstract class ChessPiece : MonoBehaviour
                             currentSquare.team = 0;
                             currentSquare = availableMoves[i];
                             currentSquare.team = team;
+                            firstMove = false;
+                            availableMoves.Clear();
+                            Chessboard.instance.allBlackMoves.Clear();
+                            Chessboard.instance.allWhiteMoves.Clear();
+                            Chessboard.instance.turnCounter++;
+
                             Highlight(-0.3f);
                             break;
                         }
@@ -131,14 +171,7 @@ public abstract class ChessPiece : MonoBehaviour
                     Highlight(-0.3f);
                 }
             }
-            
-            //Get rid of highlights, clear availablemoves list
-            for (int j = 0; j < availableMoves.Count; j++)
-            {
-                availableMoves[j].TransparentSquare();
-            }
-            availableMoves.Clear();
-            pieceHeld = false;
+
         }
     }
 
@@ -146,4 +179,5 @@ public abstract class ChessPiece : MonoBehaviour
     {
         transform.localScale = new Vector2(transform.localScale.x + value, transform.localScale.y + value);
     }
+
 }

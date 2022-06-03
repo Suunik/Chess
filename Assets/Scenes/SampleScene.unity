@@ -304,8 +304,42 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d118509e02a67394ab70ed999b611326, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  whitePieces:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  blackPieces:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   whitePiecePrefab:
-  - {fileID: -4841314427680990500, guid: 67293b88e7257ca4695e18e558f76dec, type: 3}
+  - {fileID: 4075600888481978012, guid: 67293b88e7257ca4695e18e558f76dec, type: 3}
   - {fileID: 6438969968164384872, guid: 5dfd59d777687c34d8f4d763f59859dd, type: 3}
   - {fileID: 584956237470642569, guid: 0c92637eb650f9640812775c736848cd, type: 3}
   - {fileID: 6149663493467787785, guid: d4a5ef2500437e94e8f5ff8892e3211c, type: 3}

@@ -4,13 +4,12 @@ using UnityEngine;
 
 public class Knight : ChessPiece
 {
-    private int PieceNumber = 2;
     Knight()
     {
         movementMatrix = new int[,]{ {1, 2}, { 2, 1}, { -1, 2}, { 1, -2}, { -1, -2}, { -2, -1}, { 2, -1}, { -2, 1} };
     }
 
-    public override void allInBoundsMoves()
+    public override void findAllInboundsAndNoCollisionMoves()
     {
         int row = ReturnRowColumn()[0];
         int column = ReturnRowColumn()[1];
@@ -32,14 +31,14 @@ public class Knight : ChessPiece
         }
     }
 
-    public override void FindAvailableMoves()
+    public override List<Square> FindAvailableMoves()
     {
-        allInBoundsMoves();
+        findAllInboundsAndNoCollisionMoves();
+        return availableMoves;
     }
 
-    public void Update()
+    public override void restrictMovements()
     {
-        FindAvailableMoves();
-        PieceMovement();
+
     }
 }
