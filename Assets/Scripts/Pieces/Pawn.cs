@@ -69,12 +69,6 @@ public class Pawn : ChessPiece
         findPawnAttackSquares();
         return availableMoves;
     }
-
-    public override void restrictMovements()
-    {
-
-    }
-
     public override void addPieceAttackingMovesToChessboard()
     {
         int row = ReturnRowColumn()[0];

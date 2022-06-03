@@ -26,7 +26,10 @@ public abstract class ChessPiece : MonoBehaviour
     //This is for getting all moves if there were no king restrictions
     public abstract List<Square> FindAvailableMoves();
     public abstract void findAllInboundsAndNoCollisionMoves();
-    public abstract void restrictMovements();
+    public virtual void restrictMovements()
+    {
+        //testIfKingWillBeInCheck();
+    }
 
     public int[] ReturnRowColumn()
     {
@@ -145,6 +148,38 @@ public abstract class ChessPiece : MonoBehaviour
                             //change currentsquare team then assign new square to piece
                             currentSquare.team = 0;
                             currentSquare = availableMoves[i];
+                            //If the tile the piece went to was assigned to the enemy, destroy the piece there
+                            if (team == -currentSquare.team)
+                                Debug.Log("Destroy 1st test");
+                            {
+                                if (team == 1)
+                                {
+                                    Debug.Log("Destroy 2nd test");
+                                    for (int k = 0; k < Chessboard.instance.blackPieces.Count; k++)
+                                    {
+                                        if (Chessboard.instance.blackPieces[k].currentSquare == currentSquare)
+                                        {
+                                            Chessboard.instance.blackPieces[k].killYourself();
+                                            Chessboard.instance.blackPieces.Remove(Chessboard.instance.blackPieces[k]);
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (team == -1)
+                                {
+                                    Debug.Log("Destroy 2nd test");
+                                    for (int k = 0; k < Chessboard.instance.whitePieces.Count; k++)
+                                    {
+                                        if (Chessboard.instance.whitePieces[k].currentSquare == currentSquare)
+                                        {
+                                            Chessboard.instance.whitePieces[k].killYourself();
+                                            Chessboard.instance.whitePieces.Remove(Chessboard.instance.whitePieces[k]);
+                                            break;
+                                        }
+                                    }
+                                }
+
+                            }
                             currentSquare.team = team;
                             firstMove = false;
                             availableMoves.Clear();
@@ -175,9 +210,49 @@ public abstract class ChessPiece : MonoBehaviour
         }
     }
 
+
+    protected void testIfKingWillBeInCheck()
+    {
+        //Change the piece to an available square then look at whether your team's king is in check
+        //if it is in check, remove that availablemove
+        Square previousSquare = currentSquare;
+        List<Square> newAttackSquares;
+        int arrayLength = availableMoves.Count;
+        for (int i = 0; i < arrayLength;)
+        {
+            //Assign the piece a new square
+            currentSquare = availableMoves[i];
+            //Find new squares the enemy pieces can attack
+            newAttackSquares = Chessboard.instance.allTeamMoves(-team);
+
+            //If any of the new squares is the same as team king, then remove available move
+            if (team == 1 && newAttackSquares.Contains(Chessboard.instance.whiteKingSquare))
+            {
+                availableMoves.Remove(availableMoves[i]);
+                arrayLength--;
+            }
+            else
+            {
+                i++;
+            }
+            if (team == -1 && newAttackSquares.Contains(Chessboard.instance.blackKingSquare))
+            {
+                availableMoves.Remove(availableMoves[i]);
+                arrayLength--;
+            }
+            else
+            {
+                i++;
+            }
+        }
+    }
     private void Highlight(float value)
     {
         transform.localScale = new Vector2(transform.localScale.x + value, transform.localScale.y + value);
     }
 
+    private void killYourself()
+    {
+        Destroy(gameObject);
+    }
 }

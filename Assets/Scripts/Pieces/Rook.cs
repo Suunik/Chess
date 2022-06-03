@@ -148,11 +148,4 @@ public class Rook : ChessPiece
         return availableMoves;
 
     }
-
-    public override void restrictMovements()
-    {
-        
-    }
-
-
 }

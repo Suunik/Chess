@@ -36,9 +36,4 @@ public class Knight : ChessPiece
         findAllInboundsAndNoCollisionMoves();
         return availableMoves;
     }
-
-    public override void restrictMovements()
-    {
-
-    }
 }

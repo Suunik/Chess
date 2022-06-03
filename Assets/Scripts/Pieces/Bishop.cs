@@ -140,8 +140,4 @@ public class Bishop : ChessPiece
         findAllInboundsAndNoCollisionMoves();
         return availableMoves;
     }
-    public override void restrictMovements()
-    {
-
-    }
 }

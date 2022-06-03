@@ -33,19 +33,21 @@ public class King : ChessPiece
 
     public override void restrictMovements()
     {
+        //testIfKingWillBeInCheck();
+        
         int testcounter = availableMoves.Count;
         if (team == 1)
         {
             for (int i = 0; i < testcounter;)
             {
                 List<Square> enemyMoves = Chessboard.instance.allBlackMoves;
-                Debug.Log("Check if array contains: " + availableMoves[i]);
+                //if availablemove gets deleted, everything gets shifted left
                 if (enemyMoves.Contains(availableMoves[i]))
                 {
-                    Debug.Log("Successful remove attempt: " + availableMoves[i]);
                     availableMoves.Remove(availableMoves[i]);
                     testcounter--;
                 }
+                //if an availablemove does not get deleted, increment up
                 else
                 {
                     i++;
@@ -55,21 +57,38 @@ public class King : ChessPiece
         }
         else
         {
-            for (int i = 0; i < availableMoves.Count; i++)
+            for (int i = 0; i < testcounter;)
             {
                 List<Square> enemyMoves = Chessboard.instance.allWhiteMoves;
+                //if availablemove gets deleted, everything gets shifted left
                 if (enemyMoves.Contains(availableMoves[i]))
                 {
                     availableMoves.Remove(availableMoves[i]);
+                    testcounter--;
                 }
+                //if an availablemove does not get deleted, increment up
+                else
+                {
+                    i++;
+                }
+
             }
         }
-
+        
     }
 
     public override List<Square> FindAvailableMoves()
     {
         findAllInboundsAndNoCollisionMoves();
+        if (team == 1)
+        {
+            Chessboard.instance.whiteKingSquare = currentSquare;
+        }
+        if (team == -1)
+        {
+            Chessboard.instance.blackKingSquare = currentSquare;
+        }
+
         return availableMoves;
     }
 

@@ -10,10 +10,12 @@ public class Chessboard : MonoBehaviour
     public Square[,] squares = new Square[TILE_COUNT_X, TILE_COUNT_Y];
 
     //Piece array for chessboard
-    public ChessPiece[] whitePieces = new ChessPiece[16];
-    public ChessPiece[] blackPieces = new ChessPiece[16];
+    public List<ChessPiece> whitePieces;
+    public List<ChessPiece> blackPieces;
     public List<Square> allWhiteMoves = null;
     public List<Square> allBlackMoves = null;
+    public Square whiteKingSquare;
+    public Square blackKingSquare;
 
     //For piece sprites
     public ChessPiece[] whitePiecePrefab = new ChessPiece[6];
@@ -47,12 +49,14 @@ public class Chessboard : MonoBehaviour
             //This could be modified to clear all blackPiece availableMoves arrays if its white's turn and vice versa
             foreach (ChessPiece item in whitePieces)
             {
+                item.availableMoves.Clear();
                 item.FindAvailableMoves();
                 item.addPieceAttackingMovesToChessboard();
             }
 
             foreach (ChessPiece item in blackPieces)
             {
+                item.availableMoves.Clear();
                 item.FindAvailableMoves();
                 item.addPieceAttackingMovesToChessboard();
             }
@@ -67,9 +71,11 @@ public class Chessboard : MonoBehaviour
             {
                 item.restrictMovements();
             }
-
             previousTurnCounter = turnCounter;
         }
+        
+        //Instead of calling piecemovement() in the ChessPiece class update(), having the board to all updates
+        //is easier to manage
         foreach (ChessPiece item in whitePieces)
         {
             item.PieceMovement();
@@ -168,5 +174,10 @@ public class Chessboard : MonoBehaviour
         }
 
         return result;
+    }
+
+    public bool testForChecks()
+    {
+        return false;
     }
 }
