@@ -28,7 +28,7 @@ public abstract class ChessPiece : MonoBehaviour
     public abstract List<Square> findAllInboundsAndNoCollisionMoves();
     public virtual void restrictMovements()
     {
-        //testIfKingWillBeInCheck();
+        testIfKingWillBeInCheck();
     }
 
     public int[] ReturnRowColumn()
@@ -54,30 +54,15 @@ public abstract class ChessPiece : MonoBehaviour
     }
 
 
-    //Get no collision and in bounds tiles covered by a piece and add it to chessboard squares list
+    //Get no collision and in bounds tiles covered by a piece and return it
     public virtual List<Square> findPieceAttackingMoves()
     {
-        List<Square> result = new List<Square>();
-        for (int i = 0; i < availableMoves.Count; i++)
-        {
+        List<Square> attackingMoves = new List<Square>();
+        
+        //Default attackable tiles for every piece is that they can also attack where they can legally move
+        attackingMoves.AddRange(findAllInboundsAndNoCollisionMoves());
 
-            if (team == 1)
-            {
-                if (!Chessboard.instance.allWhiteMoves.Contains(availableMoves[i]))
-                {
-                    result.Add(availableMoves[i]);
-                }
-
-            }
-            else 
-            {
-                if (!Chessboard.instance.allBlackMoves.Contains(availableMoves[i]))
-                {
-                    result.Add(availableMoves[i]);
-                }
-            }
-        }
-        return result;
+        return attackingMoves;
     }
     /*
     Every piece uses update() to check whether it has been clicked
@@ -152,11 +137,9 @@ public abstract class ChessPiece : MonoBehaviour
                             currentSquare = availableMoves[i];
                             //If the tile the piece went to was assigned to the enemy, destroy the piece there
                             if (team == -currentSquare.team)
-                                Debug.Log("Destroy 1st test");
                             {
                                 if (team == 1)
                                 {
-                                    Debug.Log("Destroy 2nd test");
                                     for (int k = 0; k < Chessboard.instance.blackPieces.Count; k++)
                                     {
                                         if (Chessboard.instance.blackPieces[k].currentSquare == currentSquare)
@@ -169,7 +152,6 @@ public abstract class ChessPiece : MonoBehaviour
                                 }
                                 if (team == -1)
                                 {
-                                    Debug.Log("Destroy 2nd test");
                                     for (int k = 0; k < Chessboard.instance.whitePieces.Count; k++)
                                     {
                                         if (Chessboard.instance.whitePieces[k].currentSquare == currentSquare)
@@ -213,41 +195,63 @@ public abstract class ChessPiece : MonoBehaviour
     }
 
 
+
+    //The most broken part of code. Everything works fine (but without pins if this is commented out in restrictmovements())
+    //Current issues include:
+    //1. can't take the piece pinning to king
+    //2. can't move some pawns on white side if only one pawn is blocking pin on white king
     protected void testIfKingWillBeInCheck()
     {
         //Change the piece to an available square then look at whether your team's king is in check
         //if it is in check, remove that availablemove
-        Square previousSquare = currentSquare;
-        List<Square> newAttackSquares;
+        Square startSquare = currentSquare;
+        List<Square> newAttackSquares = new List<Square>();
+
+        //availableMoves count before restrictions:
         int arrayLength = availableMoves.Count;
+
+
+        Debug.Log("Piece on square " + currentSquare + " has " + arrayLength + " squares to move to");
         for (int i = 0; i < arrayLength;)
         {
-            //Assign the piece a new square
+            //Assign the piece a new square temporarily
+            currentSquare.team = 0;
+            //Change the team of the new tile temporarily and save the previous team of tile
+            int previousTeam = availableMoves[i].team;
+
             currentSquare = availableMoves[i];
+            currentSquare.team = team;
+
             //Find new squares the enemy pieces can attack
-            newAttackSquares = Chessboard.instance.allTeamCoveredSquares(-team);
+            newAttackSquares.AddRange(Chessboard.instance.allTeamCoveredSquares(-team));
+
+            Debug.Log("After move to " + currentSquare + " new team " + -team + " attack square length: " + newAttackSquares.Count);
 
             //If any of the new squares is the same as team king, then remove available move
             if (team == 1 && newAttackSquares.Contains(Chessboard.instance.whiteKingSquare))
             {
+                Debug.Log("After move to " + currentSquare + " newAttackSquares includes whiteKing tile");
+                availableMoves[i].team = previousTeam;
+                availableMoves.Remove(availableMoves[i]);
+                arrayLength--;
+            }
+            else if (team == -1 && newAttackSquares.Contains(Chessboard.instance.blackKingSquare))
+            {
+                availableMoves[i].team = previousTeam;
                 availableMoves.Remove(availableMoves[i]);
                 arrayLength--;
             }
             else
             {
+                availableMoves[i].team = previousTeam;
                 i++;
             }
-            if (team == -1 && newAttackSquares.Contains(Chessboard.instance.blackKingSquare))
-            {
-                availableMoves.Remove(availableMoves[i]);
-                arrayLength--;
-            }
-            else
-            {
-                i++;
-            }
+            
+            newAttackSquares.Clear();
         }
-        currentSquare = previousSquare;
+        currentSquare = startSquare;
+        currentSquare.team = team;
+        Debug.Log("------------------------------------------------------------");
     }
     private void Highlight(float value)
     {

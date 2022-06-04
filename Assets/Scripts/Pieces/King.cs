@@ -35,7 +35,6 @@ public class King : ChessPiece
 
     public override void restrictMovements()
     {
-        //testIfKingWillBeInCheck();
         
         int testcounter = availableMoves.Count;
         if (team == 1)

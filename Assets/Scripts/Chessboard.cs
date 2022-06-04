@@ -164,14 +164,14 @@ public class Chessboard : MonoBehaviour
         {
             foreach (ChessPiece item in whitePieces)
             {
-                result.AddRange(item.findAllInboundsAndNoCollisionMoves());
+                result.AddRange(item.findPieceAttackingMoves());
             }
         }
         else if (team == -1)
         {
-            foreach (ChessPiece item in whitePieces)
+            foreach (ChessPiece item in blackPieces)
             {
-                result.AddRange(item.findAllInboundsAndNoCollisionMoves());
+                result.AddRange(item.findPieceAttackingMoves());
             }
         }
 

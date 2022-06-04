@@ -26,7 +26,7 @@ public class Pawn : ChessPiece
             }
 
         }
-        if (firstMove && WithinBounds(row, column + team))
+        if (firstMove && WithinBounds(row, column + team*2))
         {
             if (Chessboard.instance.squares[row, column + team*2].team == 0)
             {
@@ -39,36 +39,32 @@ public class Pawn : ChessPiece
         return result;
     }
 
-    private void findPawnAttackSquares()
+    private List<Square> findPawnAttackSquares()
     {
         int row = ReturnRowColumn()[0];
         int column = ReturnRowColumn()[1];
+        List<Square> result = new List<Square>();
         if (WithinBounds(row + team, column + team))
         {
             if (Chessboard.instance.squares[row + team, column + team].team == -team)
             {
-                if (!availableMoves.Contains(Chessboard.instance.squares[row + team, column + team]))
-                {
-                    availableMoves.Add(Chessboard.instance.squares[row + team, column + team]);
-                }
+                availableMoves.Add(Chessboard.instance.squares[row + team, column + team]);
             }
         }
         if (WithinBounds(row - team, column + team))
         {
             if (Chessboard.instance.squares[row - team, column + team].team == -team)
             {
-                if (!availableMoves.Contains(Chessboard.instance.squares[row - team, column + team]))
-                {
-                    availableMoves.Add(Chessboard.instance.squares[row - team, column + team]);
-                }
+                availableMoves.Add(Chessboard.instance.squares[row - team, column + team]);
             }
         }
+        return result;
     }
 
     public override List<Square> FindAvailableMoves()
     {
         availableMoves.AddRange(findAllInboundsAndNoCollisionMoves());
-        findPawnAttackSquares();
+        availableMoves.AddRange(findPawnAttackSquares());
         return availableMoves;
     }
     public override List<Square> findPieceAttackingMoves()
@@ -82,34 +78,30 @@ public class Pawn : ChessPiece
             {
                 if (WithinBounds(row + team, column + team))
                 {
-                    if (!availableMoves.Contains(Chessboard.instance.squares[row - team, column + team]))
-                    {
-                        result.Add(Chessboard.instance.squares[row + team, column + team]);
-                    }
+
+                    result.Add(Chessboard.instance.squares[row + team, column + team]);
+
                 }
                 if (WithinBounds(row - team, column + team))
                 {
-                    if (!availableMoves.Contains(Chessboard.instance.squares[row - team, column + team]))
-                    {
-                        result.Add(Chessboard.instance.squares[row - team, column + team]);
-                    }
+
+                    result.Add(Chessboard.instance.squares[row - team, column + team]);
+
                 }
             }
             else
             {
                 if (WithinBounds(row + team, column + team))
                 {
-                    if (!availableMoves.Contains(Chessboard.instance.squares[row - team, column + team]))
-                    {
-                        result.Add(Chessboard.instance.squares[row + team, column + team]);
-                    }
+
+                    result.Add(Chessboard.instance.squares[row + team, column + team]);
+
                 }
                 if (WithinBounds(row - team, column + team))
                 {
-                    if (!availableMoves.Contains(Chessboard.instance.squares[row - team, column + team]))
-                    {
-                        result.Add(Chessboard.instance.squares[row - team, column + team]);
-                    }
+
+                    result.Add(Chessboard.instance.squares[row - team, column + team]);
+
                 }
             }
         }
