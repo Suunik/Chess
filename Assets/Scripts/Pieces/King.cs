@@ -9,10 +9,11 @@ public class King : ChessPiece
         movementMatrix = new int[,] { { 1, 1 }, { 1, 0 }, { 1, -1 }, { 0, -1 }, { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, 1 } };
     }
 
-    public override void findAllInboundsAndNoCollisionMoves()
+    public override List<Square> findAllInboundsAndNoCollisionMoves()
     {
         int row = ReturnRowColumn()[0];
         int column = ReturnRowColumn()[1];
+        List<Square> result = new List<Square>();
 
         for (int i = 0; i < 8; i++)
         {
@@ -20,15 +21,16 @@ public class King : ChessPiece
             {
                 if (Chessboard.instance.squares[row + movementMatrix[i, 0], column + movementMatrix[i, 1]].team != team)
                 {
-                    if (!availableMoves.Contains(Chessboard.instance.squares[row + movementMatrix[i, 0], column + movementMatrix[i, 1]]))
+                    if (!result.Contains(Chessboard.instance.squares[row + movementMatrix[i, 0], column + movementMatrix[i, 1]]))
                     {
-                        availableMoves.Add(Chessboard.instance.squares[row + movementMatrix[i, 0], column + movementMatrix[i, 1]]);
+                        result.Add(Chessboard.instance.squares[row + movementMatrix[i, 0], column + movementMatrix[i, 1]]);
                     }
                 }
 
             }
 
         }
+        return result;
     }
 
     public override void restrictMovements()
@@ -79,7 +81,7 @@ public class King : ChessPiece
 
     public override List<Square> FindAvailableMoves()
     {
-        findAllInboundsAndNoCollisionMoves();
+        availableMoves.AddRange(findAllInboundsAndNoCollisionMoves());
         if (team == 1)
         {
             Chessboard.instance.whiteKingSquare = currentSquare;

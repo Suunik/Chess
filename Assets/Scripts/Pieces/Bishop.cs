@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class Bishop : ChessPiece
 {
-    public override void findAllInboundsAndNoCollisionMoves()
+    public override List<Square> findAllInboundsAndNoCollisionMoves()
     {
         int row = ReturnRowColumn()[0];
         int column = ReturnRowColumn()[1];
-
+        List<Square> result = new List<Square>();
         //to the right and down
         for (int i = 1; i < 8; ++i)
         {   
@@ -26,16 +26,16 @@ public class Bishop : ChessPiece
                     //Must be enemy
                     else
                     {
-                        if (!availableMoves.Contains(Chessboard.instance.squares[row - i, column + i]))
+                        if (!result.Contains(Chessboard.instance.squares[row - i, column + i]))
                         {
-                            availableMoves.Add(Chessboard.instance.squares[row - i, column + i]);
+                            result.Add(Chessboard.instance.squares[row - i, column + i]);
                         }
                         break;
                     }
                 }
-                if (!availableMoves.Contains(Chessboard.instance.squares[row - i, column + i]))
+                if (!result.Contains(Chessboard.instance.squares[row - i, column + i]))
                 {
-                    availableMoves.Add(Chessboard.instance.squares[row - i, column + i]);
+                    result.Add(Chessboard.instance.squares[row - i, column + i]);
                 }
                 
             }    
@@ -58,16 +58,16 @@ public class Bishop : ChessPiece
                     //Must be enemy
                     else
                     {
-                        if (!availableMoves.Contains(Chessboard.instance.squares[row - i, column + i]))
+                        if (!result.Contains(Chessboard.instance.squares[row - i, column + i]))
                         {
-                            availableMoves.Add(Chessboard.instance.squares[row - i, column + i]);
+                            result.Add(Chessboard.instance.squares[row - i, column + i]);
                         }
                         break;
                     }
                 }
-                if (!availableMoves.Contains(Chessboard.instance.squares[row - i, column + i]))
+                if (!result.Contains(Chessboard.instance.squares[row - i, column + i]))
                 {
-                    availableMoves.Add(Chessboard.instance.squares[row - i, column + i]);
+                    result.Add(Chessboard.instance.squares[row - i, column + i]);
                 }
             }
         }
@@ -89,16 +89,16 @@ public class Bishop : ChessPiece
                     //Must be enemy
                     else
                     {
-                        if (!availableMoves.Contains(Chessboard.instance.squares[row + i, column + i]))
+                        if (!result.Contains(Chessboard.instance.squares[row + i, column + i]))
                         {
-                            availableMoves.Add(Chessboard.instance.squares[row + i, column + i]);
+                            result.Add(Chessboard.instance.squares[row + i, column + i]);
                         }
                         break;
                     }
                 }
-                if (!availableMoves.Contains(Chessboard.instance.squares[row + i, column+i]))
+                if (!result.Contains(Chessboard.instance.squares[row + i, column+i]))
                 {
-                    availableMoves.Add(Chessboard.instance.squares[row + i, column+i]);
+                    result.Add(Chessboard.instance.squares[row + i, column+i]);
                 }
             }
         }
@@ -120,24 +120,25 @@ public class Bishop : ChessPiece
                     //Must be enemy
                     else
                     {
-                        if (!availableMoves.Contains(Chessboard.instance.squares[row + i, column + i]))
+                        if (!result.Contains(Chessboard.instance.squares[row + i, column + i]))
                         {
-                            availableMoves.Add(Chessboard.instance.squares[row + i, column + i]);
+                            result.Add(Chessboard.instance.squares[row + i, column + i]);
                         }
                         break;
                     }
                 }
-                if (!availableMoves.Contains(Chessboard.instance.squares[row + i, column + i]))
+                if (!result.Contains(Chessboard.instance.squares[row + i, column + i]))
                 {
-                    availableMoves.Add(Chessboard.instance.squares[row + i, column + i]);
+                    result.Add(Chessboard.instance.squares[row + i, column + i]);
                 }
             }
         }
+        return result;
     }
 
     public override List<Square> FindAvailableMoves()
     {
-        findAllInboundsAndNoCollisionMoves();
+        availableMoves.AddRange(findAllInboundsAndNoCollisionMoves());
         return availableMoves;
     }
 }

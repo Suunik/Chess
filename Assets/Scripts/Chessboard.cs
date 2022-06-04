@@ -51,14 +51,14 @@ public class Chessboard : MonoBehaviour
             {
                 item.availableMoves.Clear();
                 item.FindAvailableMoves();
-                item.addPieceAttackingMovesToChessboard();
+                allWhiteMoves.AddRange(item.findPieceAttackingMoves());
             }
 
             foreach (ChessPiece item in blackPieces)
             {
                 item.availableMoves.Clear();
                 item.FindAvailableMoves();
-                item.addPieceAttackingMovesToChessboard();
+                allBlackMoves.AddRange(item.findPieceAttackingMoves());
             }
 
             //After getting all unrestricted movement arrays it is now possible to restrict movements
@@ -155,21 +155,23 @@ public class Chessboard : MonoBehaviour
     }
 
     //Finds all in bounds and no collision moves for every piece in a team
-    public List<Square> allTeamMoves(int team)
+    //Returns a list of tiles a team could attack
+    public List<Square> allTeamCoveredSquares(int team)
     {
-        List<Square> result = null;
+        List<Square> result = new List<Square>();
+        //For this list we need inbounds and no collision squares + pawn attack moves
         if (team == 1)
         {
             foreach (ChessPiece item in whitePieces)
             {
-                result.AddRange(item.FindAvailableMoves());
+                result.AddRange(item.findAllInboundsAndNoCollisionMoves());
             }
         }
         else if (team == -1)
         {
             foreach (ChessPiece item in whitePieces)
             {
-                result.AddRange(item.FindAvailableMoves());
+                result.AddRange(item.findAllInboundsAndNoCollisionMoves());
             }
         }
 

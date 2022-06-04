@@ -25,7 +25,7 @@ public abstract class ChessPiece : MonoBehaviour
 
     //This is for getting all moves if there were no king restrictions
     public abstract List<Square> FindAvailableMoves();
-    public abstract void findAllInboundsAndNoCollisionMoves();
+    public abstract List<Square> findAllInboundsAndNoCollisionMoves();
     public virtual void restrictMovements()
     {
         //testIfKingWillBeInCheck();
@@ -55,8 +55,9 @@ public abstract class ChessPiece : MonoBehaviour
 
 
     //Get no collision and in bounds tiles covered by a piece and add it to chessboard squares list
-    public virtual void addPieceAttackingMovesToChessboard()
+    public virtual List<Square> findPieceAttackingMoves()
     {
+        List<Square> result = new List<Square>();
         for (int i = 0; i < availableMoves.Count; i++)
         {
 
@@ -64,7 +65,7 @@ public abstract class ChessPiece : MonoBehaviour
             {
                 if (!Chessboard.instance.allWhiteMoves.Contains(availableMoves[i]))
                 {
-                    Chessboard.instance.allWhiteMoves.Add(availableMoves[i]);
+                    result.Add(availableMoves[i]);
                 }
 
             }
@@ -72,10 +73,11 @@ public abstract class ChessPiece : MonoBehaviour
             {
                 if (!Chessboard.instance.allBlackMoves.Contains(availableMoves[i]))
                 {
-                    Chessboard.instance.allBlackMoves.Add(availableMoves[i]);
+                    result.Add(availableMoves[i]);
                 }
             }
         }
+        return result;
     }
     /*
     Every piece uses update() to check whether it has been clicked
@@ -223,7 +225,7 @@ public abstract class ChessPiece : MonoBehaviour
             //Assign the piece a new square
             currentSquare = availableMoves[i];
             //Find new squares the enemy pieces can attack
-            newAttackSquares = Chessboard.instance.allTeamMoves(-team);
+            newAttackSquares = Chessboard.instance.allTeamCoveredSquares(-team);
 
             //If any of the new squares is the same as team king, then remove available move
             if (team == 1 && newAttackSquares.Contains(Chessboard.instance.whiteKingSquare))
@@ -245,6 +247,7 @@ public abstract class ChessPiece : MonoBehaviour
                 i++;
             }
         }
+        currentSquare = previousSquare;
     }
     private void Highlight(float value)
     {

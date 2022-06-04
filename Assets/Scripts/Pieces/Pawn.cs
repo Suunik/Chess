@@ -9,18 +9,19 @@ public class Pawn : ChessPiece
         firstMove = true;
     }
 
-    public override void findAllInboundsAndNoCollisionMoves()
+    public override List<Square> findAllInboundsAndNoCollisionMoves()
     {
         int row = ReturnRowColumn()[0];
         int column = ReturnRowColumn()[1];
+        List<Square> result = new List<Square>();
 
         if (WithinBounds(row, column + team))
         {
             if (Chessboard.instance.squares[row, column + team].team == 0)
             {
-                if (!availableMoves.Contains(Chessboard.instance.squares[row, column + team]))
+                if (!result.Contains(Chessboard.instance.squares[row, column + team]))
                 {
-                    availableMoves.Add(Chessboard.instance.squares[row, column + team]);
+                    result.Add(Chessboard.instance.squares[row, column + team]);
                 }
             }
 
@@ -29,12 +30,13 @@ public class Pawn : ChessPiece
         {
             if (Chessboard.instance.squares[row, column + team*2].team == 0)
             {
-                if (!availableMoves.Contains(Chessboard.instance.squares[row, column + team*2]))
+                if (!result.Contains(Chessboard.instance.squares[row, column + team*2]))
                 {
-                    availableMoves.Add(Chessboard.instance.squares[row, column + team*2]);
+                    result.Add(Chessboard.instance.squares[row, column + team*2]);
                 }
             }
         }
+        return result;
     }
 
     private void findPawnAttackSquares()
@@ -65,15 +67,15 @@ public class Pawn : ChessPiece
 
     public override List<Square> FindAvailableMoves()
     {
-        findAllInboundsAndNoCollisionMoves();
+        availableMoves.AddRange(findAllInboundsAndNoCollisionMoves());
         findPawnAttackSquares();
         return availableMoves;
     }
-    public override void addPieceAttackingMovesToChessboard()
+    public override List<Square> findPieceAttackingMoves()
     {
         int row = ReturnRowColumn()[0];
         int column = ReturnRowColumn()[1];
-
+        List<Square> result = new List<Square>();
         if (WithinBounds(row - team, column + team))
         {
             if (team == 1)
@@ -82,14 +84,14 @@ public class Pawn : ChessPiece
                 {
                     if (!availableMoves.Contains(Chessboard.instance.squares[row - team, column + team]))
                     {
-                        Chessboard.instance.allWhiteMoves.Add(Chessboard.instance.squares[row - team, column + team]);
+                        result.Add(Chessboard.instance.squares[row + team, column + team]);
                     }
                 }
                 if (WithinBounds(row - team, column + team))
                 {
                     if (!availableMoves.Contains(Chessboard.instance.squares[row - team, column + team]))
                     {
-                        Chessboard.instance.allWhiteMoves.Add(Chessboard.instance.squares[row - team, column + team]);
+                        result.Add(Chessboard.instance.squares[row - team, column + team]);
                     }
                 }
             }
@@ -99,17 +101,18 @@ public class Pawn : ChessPiece
                 {
                     if (!availableMoves.Contains(Chessboard.instance.squares[row - team, column + team]))
                     {
-                        Chessboard.instance.allBlackMoves.Add(Chessboard.instance.squares[row - team, column + team]);
+                        result.Add(Chessboard.instance.squares[row + team, column + team]);
                     }
                 }
                 if (WithinBounds(row - team, column + team))
                 {
                     if (!availableMoves.Contains(Chessboard.instance.squares[row - team, column + team]))
                     {
-                        Chessboard.instance.allBlackMoves.Add(Chessboard.instance.squares[row - team, column + team]);
+                        result.Add(Chessboard.instance.squares[row - team, column + team]);
                     }
                 }
             }
         }
+        return result;
     }
 }
