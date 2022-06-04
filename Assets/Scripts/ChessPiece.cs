@@ -28,7 +28,7 @@ public abstract class ChessPiece : MonoBehaviour
     public abstract List<Square> findAllInboundsAndNoCollisionMoves();
     public virtual void restrictMovements()
     {
-        testIfKingWillBeInCheck();
+        //testIfKingWillBeInCheck();
     }
 
     public int[] ReturnRowColumn()
