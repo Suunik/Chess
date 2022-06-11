@@ -29,6 +29,15 @@ public abstract class ChessPiece : MonoBehaviour
     public virtual void restrictMovements()
     {
         //testIfKingWillBeInCheck();
+        List<Square> illegalMovesForPiece = simulateAllMovesAndReturnIllegal();
+        Debug.Log("Illegal moves for piece on " + currentSquare + " are: ");
+
+        foreach (Square item in illegalMovesForPiece)
+        {
+            Debug.Log(item.ReturnSquare());
+        }
+        Debug.Log("------------------------------------------------------------");
+
     }
 
     public int[] ReturnRowColumn()
@@ -253,6 +262,92 @@ public abstract class ChessPiece : MonoBehaviour
         currentSquare.team = team;
         Debug.Log("------------------------------------------------------------");
     }
+
+
+    //Returns an array of non-viable moves for a ChessPiece
+    public List<Square> simulateAllMovesAndReturnIllegal()
+    {
+        //Create the list where to store moves that leave the king in check
+        List<Square> result = new List<Square>();
+        List<ChessPiece> CombinedActualPieces = new List<ChessPiece>();
+        CombinedActualPieces.AddRange(Chessboard.instance.whitePieces);
+        CombinedActualPieces.AddRange(Chessboard.instance.blackPieces);
+
+
+        //Create a hard copy of all pieces on the board (hardcoded play area)
+        List<ChessPiece> simulationChessPieces = new List<ChessPiece>(CombinedActualPieces);
+        List<ChessPiece> simulationAttackingPieces = new List<ChessPiece>();
+        foreach (ChessPiece item in simulationChessPieces)
+        {
+            if (item.team == -team)
+            {
+                simulationAttackingPieces.Add(item);
+            }
+        }
+
+
+        //find the piece that is to be simulated
+        foreach (ChessPiece item in simulationChessPieces)
+        {
+            if (item.currentSquare == currentSquare)
+            {
+                ChessPiece myPiece;
+                myPiece = item;
+                List<Square> myPieceAvailableMoves = myPiece.FindAvailableMoves();
+                
+                //Simulate moves for ChessPiece
+                Debug.Log("Available moves for the piece on " +myPiece.currentSquare +" being simulated are: ");
+                for (int i = 0; i < myPieceAvailableMoves.Count; i++)
+                {
+                    Debug.Log(myPieceAvailableMoves[i].ReturnSquare());
+                    //Move to the new tile
+                    //change currentsquare team then assign new square to piece
+                    myPiece.currentSquare.team = 0;
+                    myPiece.currentSquare = myPieceAvailableMoves[i];
+                    //If the tile the piece went to was assigned to the enemy, destroy the piece there
+                    if (team == -myPiece.currentSquare.team)
+                    {
+                        Debug.Log("Current tile has an enemy on it");
+                        if (team == 1)
+                        {
+                            for (int k = 0; k < simulationAttackingPieces.Count; k++)
+                            {
+                                if (simulationAttackingPieces[k].currentSquare == currentSquare)
+                                {
+                                    simulationAttackingPieces[k].killYourself();
+                                    simulationAttackingPieces.Remove(simulationAttackingPieces[k]);
+                                    break;
+                                }
+                            }
+                        }
+                        if (team == -1)
+                        {
+                            for (int k = 0; k < simulationAttackingPieces.Count; k++)
+                            {
+                                if (simulationAttackingPieces[k].currentSquare == currentSquare)
+                                {
+                                    simulationAttackingPieces[k].killYourself();
+                                    simulationAttackingPieces.Remove(simulationAttackingPieces[k]);
+                                    break;
+                                }
+                            }
+                        }
+
+                    }
+                    myPiece.currentSquare.team = team;
+                    myPiece.firstMove = false;
+                    //Now that the move has been confirmed, lets recalculate the attackers tiles:
+
+                }
+                break;
+            }
+        }
+
+
+
+        return result;
+    }
+
     private void Highlight(float value)
     {
         transform.localScale = new Vector2(transform.localScale.x + value, transform.localScale.y + value);
