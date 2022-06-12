@@ -71,20 +71,6 @@ public class Chessboard : MonoBehaviour
             {
                 item.restrictMovements();
             }
-            foreach (ChessPiece black in blackPieces)
-            {
-                if (black.kingAttacker)
-                {
-                    Debug.Log("This is attacking king: " + black);
-                }
-            }
-            foreach (ChessPiece white in whitePieces)
-            {
-                if (white.kingAttacker)
-                {
-                    Debug.Log("This is attacking king: " + white);
-                }
-            }
             previousTurnCounter = turnCounter;
         }
         

@@ -19,19 +19,12 @@ public abstract class ChessPiece : MonoBehaviour
 
     public bool kingAttacker;
 
-    // Update is called once per frame for every ChessPiece
-    void Update()
-    {
-
-    }
-
     //This is for getting all moves if there were no king restrictions
     public abstract List<Square> FindAvailableMoves();
     public abstract List<Square> findAllInboundsAndNoCollisionMoves();
     public virtual void restrictMovements()
     {
-        //testIfKingWillBeInCheck();
-        kingFuckery();
+        checkIfKingUnderCheck();
     }
 
     public int[] ReturnRowColumn()
@@ -197,134 +190,64 @@ public abstract class ChessPiece : MonoBehaviour
         }
     }
 
-
-
-    //The most broken part of code. Everything works fine (but without pins if this is commented out in restrictmovements())
-    //Current issues include:
-    //1. can't take the piece pinning to king
-    //2. can't move some pawns on white side if only one pawn is blocking pin on white king
-    protected void testIfKingWillBeInCheck()
+    private void checkIfKingUnderCheck()
     {
-        //Change the piece to an available square then look at whether your team's king is in check
-        //if it is in check, remove that availablemove
-        Square startSquare = currentSquare;
-        List<Square> newAttackSquares = new List<Square>();
-
-        //availableMoves count before restrictions:
-        int arrayLength = availableMoves.Count;
-
-
-        Debug.Log("Piece on square " + currentSquare + " has " + arrayLength + " squares to move to");
-        for (int i = 0; i < arrayLength;)
-        {
-            //Assign the piece a new square temporarily
-            currentSquare.team = 0;
-            //Change the team of the new tile temporarily and save the previous team of tile
-            int previousTeam = availableMoves[i].team;
-
-            currentSquare = availableMoves[i];
-            currentSquare.team = team;
-
-            //Find new squares the enemy pieces can attack
-            newAttackSquares.AddRange(Chessboard.instance.allTeamCoveredSquares(-team));
-
-            Debug.Log("After move to " + currentSquare + " new team " + -team + " attack square length: " + newAttackSquares.Count);
-
-            //If any of the new squares is the same as team king, then remove available move
-            if (team == 1 && newAttackSquares.Contains(Chessboard.instance.whiteKingSquare))
-            {
-                Debug.Log("After move to " + currentSquare + " newAttackSquares includes whiteKing tile");
-                availableMoves[i].team = previousTeam;
-                availableMoves.Remove(availableMoves[i]);
-                arrayLength--;
-            }
-            else if (team == -1 && newAttackSquares.Contains(Chessboard.instance.blackKingSquare))
-            {
-                availableMoves[i].team = previousTeam;
-                availableMoves.Remove(availableMoves[i]);
-                arrayLength--;
-            }
-            else
-            {
-                availableMoves[i].team = previousTeam;
-                i++;
-            }
-            
-            newAttackSquares.Clear();
-        }
-        currentSquare = startSquare;
-        currentSquare.team = team;
-        Debug.Log("------------------------------------------------------------");
-    }
-
-    private void kingFuckery()
-    {
-        //for all enemy attacking squares
-        List<Square> enemyAttackingKingMoves = new List<Square>();
         //remember all the squares to remove from availablemoves list
         List<Square> movesToDelete = new List<Square>();
         //remember the squares that the king is being attacked from
         List<Square> kingAttackerSquare = new List<Square>();
-
+        //take piece off of current square
+        currentSquare.team = 0;
         //loop through every available move
         foreach (Square pieceMoves in availableMoves)
         {
-            for (int x = 0; x < 8; ++x)
+            //save squares previous team
+            int previousTeam = pieceMoves.team;
+            //set piece on the test square
+            pieceMoves.team = team;
+            //check if enemy can attack king while piece is on a temporary square
+            if (team == 1)
             {
-                for (int y = 0; y < 8; ++y)
+                //Find enemy piece that is attacking the king
+                foreach (ChessPiece blackPiece in Chessboard.instance.blackPieces)
                 {
-                    //take piece off of current square
-                    if (Chessboard.instance.squares[x, y] == currentSquare)
+                    if (blackPiece.findPieceAttackingMoves().Contains(Chessboard.instance.whiteKingSquare))
                     {
-                        Chessboard.instance.squares[x, y].team = 0;
-                    }
-
-                    if (Chessboard.instance.squares[x, y] == pieceMoves)
-                    {
-                        //save squares previous team
-                        int previousTeam = Chessboard.instance.squares[x, y].team;
-                        //set piece on the square
-                        Chessboard.instance.squares[x, y].team = team;
-                        //Find new squares the enemy pieces can attack
-                        enemyAttackingKingMoves.AddRange(Chessboard.instance.allTeamCoveredSquares(-team));
-
-                        //check if enemy can attack king while piece is on a temporary square
-                        if (team == 1)
+                        //remember the move to delete later
+                        movesToDelete.Add(pieceMoves);
+                        //add the piece position where king is being attacked from only once
+                        if (!kingAttackerSquare.Contains(blackPiece.currentSquare))
                         {
-                            //Find enemy piece that is attacking the king
-                            foreach (ChessPiece blackPiece in Chessboard.instance.blackPieces)
-                            {
-                                if (blackPiece.findPieceAttackingMoves().Contains(Chessboard.instance.whiteKingSquare))
-                                {
-                                    //remember the move to delete later
-                                    movesToDelete.Add(pieceMoves);
-                                    //remember piece position where king is being attacked from
-                                    kingAttackerSquare.Add(blackPiece.currentSquare);
-                                }
-                            }
+                            kingAttackerSquare.Add(blackPiece.currentSquare);
                         }
-                        if (team == -1)
-                        {
-                            //Find enemy piece that is attacking the king
-                            foreach (ChessPiece whitePiece in Chessboard.instance.whitePieces)
-                            {
-                                if (whitePiece.findPieceAttackingMoves().Contains(Chessboard.instance.blackKingSquare))
-                                {
-                                    //remember the move to delete later
-                                    movesToDelete.Add(pieceMoves);
-                                    //remember piece position where king is being attacked from
-                                    kingAttackerSquare.Add(whitePiece.currentSquare);
-                                }
-                            }
-                        }
-                        //reset squares previous team
-                        Chessboard.instance.squares[x, y].team = previousTeam;
-
-                        //clear virtual enemy moves
-                        enemyAttackingKingMoves.Clear();
                     }
                 }
             }
+            if (team == -1)
+            {
+                //Find enemy piece that is attacking the king
+                foreach (ChessPiece whitePiece in Chessboard.instance.whitePieces)
+                {
+                    if (whitePiece.findPieceAttackingMoves().Contains(Chessboard.instance.blackKingSquare))
+                    {
+                        //remember the move to delete later
+                        movesToDelete.Add(pieceMoves);
+                        //add the piece position where king is being attacked from only once
+                        if (!kingAttackerSquare.Contains(whitePiece.currentSquare))
+                        {
+                            kingAttackerSquare.Add(whitePiece.currentSquare);
+                        }
+                    }
+                }
+            }
+            //reset test squares previous team
+            pieceMoves.team = previousTeam;
+        }
+        //You can only move the king if there is more than one attacker
+        //If more than one king attacker piece remove all available moves
+        if (kingAttackerSquare.Count > 1)
+        {
+            availableMoves.Clear();
         }
         //delete the saved moves
         foreach (Square removeSquare in movesToDelete)
@@ -339,16 +262,7 @@ public abstract class ChessPiece : MonoBehaviour
             }
         }
         //set the piece back to original position
-        for (int x = 0; x < 8; ++x)
-        {
-            for (int y = 0; y < 8; ++y)
-            {
-                if(Chessboard.instance.squares[x,y] == currentSquare)
-                {
-                    Chessboard.instance.squares[x, y].team = team;
-                }
-            }
-        }
+        currentSquare.team = team;
     }
     private void Highlight(float value)
     {

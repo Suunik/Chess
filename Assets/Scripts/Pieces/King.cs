@@ -35,47 +35,37 @@ public class King : ChessPiece
 
     public override void restrictMovements()
     {
-        
-        int testcounter = availableMoves.Count;
-        if (team == 1)
-        {
-            for (int i = 0; i < testcounter;)
-            {
-                List<Square> enemyMoves = Chessboard.instance.allBlackMoves;
-                //if availablemove gets deleted, everything gets shifted left
-                if (enemyMoves.Contains(availableMoves[i]))
-                {
-                    availableMoves.Remove(availableMoves[i]);
-                    testcounter--;
-                }
-                //if an availablemove does not get deleted, increment up
-                else
-                {
-                    i++;
-                }
+        //remember all enemy attack squares
+        List<Square> enemyAttackSquares = new List<Square>();
+        //remember what moves should be deleted
+        List<Square> movesToDelete = new List<Square>();
 
-            }
-        }
-        else
-        {
-            for (int i = 0; i < testcounter;)
-            {
-                List<Square> enemyMoves = Chessboard.instance.allWhiteMoves;
-                //if availablemove gets deleted, everything gets shifted left
-                if (enemyMoves.Contains(availableMoves[i]))
-                {
-                    availableMoves.Remove(availableMoves[i]);
-                    testcounter--;
-                }
-                //if an availablemove does not get deleted, increment up
-                else
-                {
-                    i++;
-                }
-
-            }
-        }
+        //remove king from currentsquare
+        currentSquare.team = 0;
         
+        foreach (Square kingMove in availableMoves)
+        {
+            //Save squares current piece
+            int previousTeam = kingMove.team;
+            //Place king on new square
+            kingMove.team = team;
+            //save enemy moves list while king is placed on new square
+            enemyAttackSquares.AddRange(Chessboard.instance.allTeamCoveredSquares(-team));
+            //remember all squares where king cannot be
+            if (enemyAttackSquares.Contains(kingMove))
+            {
+                movesToDelete.Add(kingMove);
+            }
+            //return previous piece on square
+            kingMove.team = previousTeam;
+        }
+        //remove all the moves where king cannot go
+        foreach (Square move in movesToDelete)
+        {
+            availableMoves.Remove(move);
+        }
+        //return king to original position
+        currentSquare.team = team;
     }
 
     public override List<Square> FindAvailableMoves()
@@ -92,5 +82,4 @@ public class King : ChessPiece
 
         return availableMoves;
     }
-
 }
