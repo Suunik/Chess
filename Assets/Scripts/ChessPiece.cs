@@ -328,7 +328,7 @@ public abstract class ChessPiece : MonoBehaviour
             }
         }
         //set the piece back to original position
-        currentSquare.team = team;
+        currentSquare = startSquare;
     }
     private void Highlight(float value)
     {
