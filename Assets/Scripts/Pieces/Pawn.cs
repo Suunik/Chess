@@ -23,19 +23,19 @@ public class Pawn : ChessPiece
                 {
                     result.Add(Chessboard.instance.squares[row, column + team]);
                 }
-            }
-
-        }
-        if (firstMove && WithinBounds(row, column + team*2))
-        {
-            if (Chessboard.instance.squares[row, column + team*2].team == 0)
-            {
-                if (!result.Contains(Chessboard.instance.squares[row, column + team*2]))
+                //First move allows to move up two squares
+                if (firstMove && WithinBounds(row, column + team * 2))
                 {
-                    result.Add(Chessboard.instance.squares[row, column + team*2]);
+                    if (Chessboard.instance.squares[row, column + team * 2].team == 0)
+                    {
+                        if (!result.Contains(Chessboard.instance.squares[row, column + team * 2]))
+                        {
+                            result.Add(Chessboard.instance.squares[row, column + team * 2]);
+                        }
+                    }
                 }
             }
-        }
+        }    
         return result;
     }
 
@@ -60,7 +60,6 @@ public class Pawn : ChessPiece
         }
         return result;
     }
-
     public override List<Square> FindAvailableMoves()
     {
         availableMoves.AddRange(findAllInboundsAndNoCollisionMoves());
