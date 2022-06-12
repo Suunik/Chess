@@ -147,6 +147,5 @@ public class Rook : ChessPiece
         availableMoves.AddRange(findAllInboundsAndNoCollisionMoves());
 
         return availableMoves;
-
     }
 }
