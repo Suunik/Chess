@@ -5,8 +5,8 @@ using UnityEngine;
 public class Chessboard : MonoBehaviour
 {
     public static Chessboard instance;
-    static public int TILE_COUNT_X = 8;
-    static public int TILE_COUNT_Y = 8;
+    static private int TILE_COUNT_X = 8;
+    static private int TILE_COUNT_Y = 8;
     public Square[,] squares = new Square[TILE_COUNT_X, TILE_COUNT_Y];
 
     //Piece array for chessboard
@@ -71,6 +71,20 @@ public class Chessboard : MonoBehaviour
             {
                 item.restrictMovements();
             }
+            foreach (ChessPiece black in blackPieces)
+            {
+                if (black.kingAttacker)
+                {
+                    Debug.Log("This is attacking king: " + black);
+                }
+            }
+            foreach (ChessPiece white in whitePieces)
+            {
+                if (white.kingAttacker)
+                {
+                    Debug.Log("This is attacking king: " + white);
+                }
+            }
             previousTurnCounter = turnCounter;
         }
         
@@ -86,8 +100,6 @@ public class Chessboard : MonoBehaviour
         }
 
     }
-
-
     private void SpawnSquares()
     {
         for (int row = 0; row < TILE_COUNT_X; ++row)
@@ -177,6 +189,9 @@ public class Chessboard : MonoBehaviour
 
         return result;
     }
-    
 
+    public bool testForChecks()
+    {
+        return false;
+    }
 }

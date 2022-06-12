@@ -17,6 +17,8 @@ public abstract class ChessPiece : MonoBehaviour
 
     public int team;
 
+    public bool kingAttacker;
+
     // Update is called once per frame for every ChessPiece
     void Update()
     {
@@ -29,15 +31,7 @@ public abstract class ChessPiece : MonoBehaviour
     public virtual void restrictMovements()
     {
         //testIfKingWillBeInCheck();
-        List<Square> illegalMovesForPiece = simulateAllMovesAndReturnIllegal();
-        Debug.Log("Illegal moves for piece on " + currentSquare + " are: ");
-
-        foreach (Square item in illegalMovesForPiece)
-        {
-            Debug.Log(item.ReturnSquare());
-        }
-        Debug.Log("------------------------------------------------------------");
-
+        kingFuckery();
     }
 
     public int[] ReturnRowColumn()
@@ -263,91 +257,99 @@ public abstract class ChessPiece : MonoBehaviour
         Debug.Log("------------------------------------------------------------");
     }
 
-
-    //Returns an array of non-viable moves for a ChessPiece
-    public List<Square> simulateAllMovesAndReturnIllegal()
+    private void kingFuckery()
     {
-        //Create the list where to store moves that leave the king in check
-        List<Square> result = new List<Square>();
-        List<ChessPiece> CombinedActualPieces = new List<ChessPiece>();
-        CombinedActualPieces.AddRange(Chessboard.instance.whitePieces);
-        CombinedActualPieces.AddRange(Chessboard.instance.blackPieces);
+        //for all enemy attacking squares
+        List<Square> enemyAttackingKingMoves = new List<Square>();
+        //remember all the squares to remove from availablemoves list
+        List<Square> movesToDelete = new List<Square>();
+        //remember the squares that the king is being attacked from
+        List<Square> kingAttackerSquare = new List<Square>();
 
-
-        //Create a hard copy of all pieces on the board (hardcoded play area)
-        List<ChessPiece> simulationChessPieces = new List<ChessPiece>(CombinedActualPieces);
-        List<ChessPiece> simulationAttackingPieces = new List<ChessPiece>();
-        foreach (ChessPiece item in simulationChessPieces)
+        //loop through every available move
+        foreach (Square pieceMoves in availableMoves)
         {
-            if (item.team == -team)
+            for (int x = 0; x < 8; ++x)
             {
-                simulationAttackingPieces.Add(item);
-            }
-        }
-
-
-        //find the piece that is to be simulated
-        foreach (ChessPiece item in simulationChessPieces)
-        {
-            if (item.currentSquare == currentSquare)
-            {
-                ChessPiece myPiece;
-                myPiece = item;
-                List<Square> myPieceAvailableMoves = myPiece.FindAvailableMoves();
-                
-                //Simulate moves for ChessPiece
-                Debug.Log("Available moves for the piece on " +myPiece.currentSquare +" being simulated are: ");
-                for (int i = 0; i < myPieceAvailableMoves.Count; i++)
+                for (int y = 0; y < 8; ++y)
                 {
-                    Debug.Log(myPieceAvailableMoves[i].ReturnSquare());
-                    //Move to the new tile
-                    //change currentsquare team then assign new square to piece
-                    myPiece.currentSquare.team = 0;
-                    myPiece.currentSquare = myPieceAvailableMoves[i];
-                    //If the tile the piece went to was assigned to the enemy, destroy the piece there
-                    if (team == -myPiece.currentSquare.team)
+                    //take piece off of current square
+                    if (Chessboard.instance.squares[x, y] == currentSquare)
                     {
-                        Debug.Log("Current tile has an enemy on it");
+                        Chessboard.instance.squares[x, y].team = 0;
+                    }
+
+                    if (Chessboard.instance.squares[x, y] == pieceMoves)
+                    {
+                        //save squares previous team
+                        int previousTeam = Chessboard.instance.squares[x, y].team;
+                        //set piece on the square
+                        Chessboard.instance.squares[x, y].team = team;
+                        //Find new squares the enemy pieces can attack
+                        enemyAttackingKingMoves.AddRange(Chessboard.instance.allTeamCoveredSquares(-team));
+
+                        //check if enemy can attack king while piece is on a temporary square
                         if (team == 1)
                         {
-                            for (int k = 0; k < simulationAttackingPieces.Count; k++)
+                            //Find enemy piece that is attacking the king
+                            foreach (ChessPiece blackPiece in Chessboard.instance.blackPieces)
                             {
-                                if (simulationAttackingPieces[k].currentSquare == currentSquare)
+                                if (blackPiece.findPieceAttackingMoves().Contains(Chessboard.instance.whiteKingSquare))
                                 {
-                                    simulationAttackingPieces[k].killYourself();
-                                    simulationAttackingPieces.Remove(simulationAttackingPieces[k]);
-                                    break;
+                                    //remember the move to delete later
+                                    movesToDelete.Add(pieceMoves);
+                                    //remember piece position where king is being attacked from
+                                    kingAttackerSquare.Add(blackPiece.currentSquare);
                                 }
                             }
                         }
                         if (team == -1)
                         {
-                            for (int k = 0; k < simulationAttackingPieces.Count; k++)
+                            //Find enemy piece that is attacking the king
+                            foreach (ChessPiece whitePiece in Chessboard.instance.whitePieces)
                             {
-                                if (simulationAttackingPieces[k].currentSquare == currentSquare)
+                                if (whitePiece.findPieceAttackingMoves().Contains(Chessboard.instance.blackKingSquare))
                                 {
-                                    simulationAttackingPieces[k].killYourself();
-                                    simulationAttackingPieces.Remove(simulationAttackingPieces[k]);
-                                    break;
+                                    //remember the move to delete later
+                                    movesToDelete.Add(pieceMoves);
+                                    //remember piece position where king is being attacked from
+                                    kingAttackerSquare.Add(whitePiece.currentSquare);
                                 }
                             }
                         }
+                        //reset squares previous team
+                        Chessboard.instance.squares[x, y].team = previousTeam;
 
+                        //clear virtual enemy moves
+                        enemyAttackingKingMoves.Clear();
                     }
-                    myPiece.currentSquare.team = team;
-                    myPiece.firstMove = false;
-                    //Now that the move has been confirmed, lets recalculate the attackers tiles:
-
                 }
-                break;
             }
         }
-
-
-
-        return result;
+        //delete the saved moves
+        foreach (Square removeSquare in movesToDelete)
+        {
+            if (availableMoves.Contains(removeSquare))
+            {
+                //skip deleteting if it is king attacker square
+                if (!kingAttackerSquare.Contains(removeSquare))
+                {
+                    availableMoves.Remove(removeSquare);
+                }
+            }
+        }
+        //set the piece back to original position
+        for (int x = 0; x < 8; ++x)
+        {
+            for (int y = 0; y < 8; ++y)
+            {
+                if(Chessboard.instance.squares[x,y] == currentSquare)
+                {
+                    Chessboard.instance.squares[x, y].team = team;
+                }
+            }
+        }
     }
-
     private void Highlight(float value)
     {
         transform.localScale = new Vector2(transform.localScale.x + value, transform.localScale.y + value);
