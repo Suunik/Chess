@@ -7,8 +7,8 @@ public class King : ChessPiece
     King()
     {
         movementMatrix = new int[,] { { 1, 1 }, { 1, 0 }, { 1, -1 }, { 0, -1 }, { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, 1 } };
+        pieceLetter = (team == 1) ? 'K' : 'k';
     }
-
     public override List<Square> findAllInboundsAndNoCollisionMoves()
     {
         int row = ReturnRowColumn()[0];
@@ -32,7 +32,6 @@ public class King : ChessPiece
         }
         return result;
     }
-
     public override void restrictMovements()
     {
         //remember all enemy attack squares
@@ -67,7 +66,6 @@ public class King : ChessPiece
         //return king to original position
         currentSquare.team = team;
     }
-
     public override List<Square> FindAvailableMoves()
     {
         availableMoves.AddRange(findAllInboundsAndNoCollisionMoves());

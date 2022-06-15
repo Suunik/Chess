@@ -7,6 +7,7 @@ public class Pawn : ChessPiece
     Pawn()
     {
         firstMove = true;
+        pieceLetter = (team == 1) ? 'P' : 'p';
     }
 
     public override List<Square> findAllInboundsAndNoCollisionMoves()

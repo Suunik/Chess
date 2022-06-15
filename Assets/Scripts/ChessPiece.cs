@@ -11,14 +11,15 @@ public abstract class ChessPiece : MonoBehaviour
     protected int pieceNumber;
     public List<Square> availableMoves = new List<Square>();
 
+    public char pieceLetter;
+
     private Rect Hitbox;
     private bool pieceHeld;
     protected bool firstMove;
 
     public int team;
-
     public bool kingAttacker;
-
+    
     //This is for getting all moves if there were no king restrictions
     public abstract List<Square> FindAvailableMoves();
     public abstract List<Square> findAllInboundsAndNoCollisionMoves();
@@ -81,6 +82,7 @@ public abstract class ChessPiece : MonoBehaviour
                 {
                     Highlight(0.3f);
                     pieceHeld = true;
+                    
                 }
             }
 
@@ -130,6 +132,9 @@ public abstract class ChessPiece : MonoBehaviour
                         {
                             //change currentsquare team then assign new square to piece
                             currentSquare.team = 0;
+                            //remove piece letter from square
+                            currentSquare.pieceOnSquare = '0';
+                            //assign new current square
                             currentSquare = availableMoves[i];
                             //If the tile the piece went to was assigned to the enemy, destroy the piece there
                             if (team == -currentSquare.team)
@@ -161,6 +166,8 @@ public abstract class ChessPiece : MonoBehaviour
 
                             }
                             currentSquare.team = team;
+                            //assign piece to a new square
+                            currentSquare.pieceOnSquare = pieceLetter;
                             firstMove = false;
                             availableMoves.Clear();
                             Chessboard.instance.allBlackMoves.Clear();
