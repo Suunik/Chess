@@ -25,6 +25,9 @@ public class Chessboard : MonoBehaviour
 
     public int turnCounter = 1;
     public int previousTurnCounter = 0;
+    private string previousPosition;
+
+    public Square enPassantSquare = null;
     // Start is called before the first frame update
     void Start()
     {
@@ -33,47 +36,43 @@ public class Chessboard : MonoBehaviour
         //Create all tile objects and assign them a value e.g. d3
         SpawnSquares();
 
-        //Create all white piece objects in their correct location
-        SpawnAllWhitePieces();
-
-        //Create all black piece objects in their correct location
-        SpawnAllBlackPieces();
+        spawnFENPosition("rhbqkbhr/pppppppp/8/8/8/8/PPPPPPPP/RHBQKBHR");
     }
 
     // Update is called once per frame
     void Update()
     {
-        //Calculate availablemoves for every piece once per turn
+
         if (turnCounter != previousTurnCounter)
         {
+            checkForEnPassant(previousPosition);
             //This could be modified to clear all blackPiece availableMoves arrays if its white's turn and vice versa
             foreach (ChessPiece item in whitePieces)
             {
                 item.availableMoves.Clear();
+                //Calculate availablemoves for every piece once per turn
                 item.FindAvailableMoves();
                 allWhiteMoves.AddRange(item.findPieceAttackingMoves());
+                //After getting all unrestricted movement arrays it is now possible to restrict movements
+                item.restrictMovements();
             }
 
             foreach (ChessPiece item in blackPieces)
             {
                 item.availableMoves.Clear();
+                //Calculate availablemoves for every piece once per turn
                 item.FindAvailableMoves();
                 allBlackMoves.AddRange(item.findPieceAttackingMoves());
-            }
-
-            //After getting all unrestricted movement arrays it is now possible to restrict movements
-            foreach (ChessPiece item in blackPieces)
-            {
-                item.restrictMovements();
-            }
-            //After getting all unrestricted movement arrays it is now possible to restrict movements
-            foreach (ChessPiece item in whitePieces)
-            {
+                //After getting all unrestricted movement arrays it is now possible to restrict movements
                 item.restrictMovements();
             }
             previousTurnCounter = turnCounter;
+
+            Debug.Log(generateFEN());
+            //remember the position
+            previousPosition = generateFEN();
         }
-        
+
         //Instead of calling piecemovement() in the ChessPiece class update(), having the board to all updates
         //is easier to manage
         foreach (ChessPiece item in whitePieces)
@@ -107,7 +106,7 @@ public class Chessboard : MonoBehaviour
         {
             SpawnSingleWhitePiece(i, 0, 1, i);
         }
-        
+
         SpawnSingleWhitePiece(8, 1, 0, 0);
         SpawnSingleWhitePiece(9, 2, 0, 1);
         SpawnSingleWhitePiece(10, 3, 0, 2);
@@ -116,7 +115,7 @@ public class Chessboard : MonoBehaviour
         SpawnSingleWhitePiece(13, 3, 0, 5);
         SpawnSingleWhitePiece(14, 2, 0, 6);
         SpawnSingleWhitePiece(15, 1, 0, 7);
-        
+
     }
     private void SpawnAllBlackPieces()
     {
@@ -142,6 +141,8 @@ public class Chessboard : MonoBehaviour
         whitePieces[PieceNumber].currentSquare = squares[row, column];
         whitePieces[PieceNumber].team = 1;
         whitePieces[PieceNumber].currentSquare.team = 1;
+
+        squares[row, column].pieceOnSquare = whitePieces[PieceNumber].pieceLetter;
     }
     private void SpawnSingleBlackPiece(int PieceNumber, int PiecePrefab, int column, int row)
     {
@@ -150,6 +151,8 @@ public class Chessboard : MonoBehaviour
         blackPieces[PieceNumber].currentSquare = squares[row, column];
         blackPieces[PieceNumber].team = -1;
         blackPieces[PieceNumber].currentSquare.team = -1;
+
+        squares[row, column].pieceOnSquare = blackPieces[PieceNumber].pieceLetter;
     }
 
     //Finds all in bounds and no collision moves for every piece in a team
@@ -175,9 +178,185 @@ public class Chessboard : MonoBehaviour
 
         return result;
     }
-
-    public bool testForChecks()
+    //for the main position
+    private string firstFENField()
     {
-        return false;
+        string FEN = "";
+
+        //starts counting squares from up left
+        //finishes on bottom right
+        for (int y = 7; y >= 0; --y)
+        {
+            //remember how many empty squares there are between pieces
+            int emptySquareCount = 0;
+            for (int x = 0; x < TILE_COUNT_X; ++x)
+            {
+                //if square is not empty
+                if (squares[x, y].pieceOnSquare != '0')
+                {
+                    //if there has been empty space
+                    if (emptySquareCount != 0)
+                    {
+                        //add emptySquareCount to the string
+                        FEN = FEN + (char)(48 + emptySquareCount);
+                        //reset the count
+                        emptySquareCount = 0;
+                    }
+                    //add piece letter to the FEN code
+                    FEN = FEN + squares[x, y].pieceOnSquare;
+                }
+                //if square is empty
+                if (squares[x, y].pieceOnSquare == '0')
+                {
+                    //add to the count
+                    ++emptySquareCount;
+                }
+            }
+            //if whole row is empty add it to the string
+            if (emptySquareCount != 0)
+            {
+                FEN = FEN + (char)(48 + emptySquareCount);
+            }
+            
+            if (y > 0)
+            {
+                //new column
+                FEN = FEN + '/';
+            }
+            //skips the last '/' symbol and adds whitespace instead
+            else
+            {
+                FEN = FEN + ' ';
+            }
+        }
+        return FEN;
+    }
+    //who can move this turn
+    private string secondFENField()
+    {
+        string FEN = "";
+        if (turnCounter % 2 != 0)
+        {
+            FEN = FEN + 'w' + ' ';
+        }
+        if (turnCounter % 2 == 0)
+        {
+            FEN = FEN + 'b' + ' ';
+        }
+        return FEN;
+    }
+    //for castling
+    private string thirdFENField()
+    {
+        string FEN = "";
+
+        FEN = FEN + '-' + ' ';
+        return FEN;
+    }
+    //for en passant
+    private string fourthFENField()
+    {
+        string FEN = "";
+
+        FEN = FEN + '-' + ' ';
+        return FEN;
+    }
+    //turn counter
+    private string fifthFENField()
+    {
+        string FEN = "";
+
+        FEN = "" + (char)(turnCounter + 48);
+
+        return FEN;
+    }
+
+    private string generateFEN()
+    {
+        string FEN = "";
+
+        FEN = FEN + firstFENField();
+        FEN = FEN + secondFENField();
+        FEN = FEN + thirdFENField();
+        FEN = FEN + fourthFENField();
+        FEN = FEN + fifthFENField();
+
+        return FEN;
+    }
+
+    private void spawnFENPosition(string FEN)
+    {
+        //place where the checking begins
+        int row = 0;
+        int column = 7;
+        //Piece numbers for white and black(needed for piece arrays)
+        int white_piece_number = 0;
+        int black_piece_number = 0;
+        //loop the whole FEN code
+        for (int i = 0; i < FEN.Length; ++i)
+        {
+            //if white piece
+            //spawn corresponding piece on corresponding square
+            if (FEN[i] > 'A' && FEN[i] < 'Z')
+            {
+                if (FEN[i] == 'P')
+                    SpawnSingleWhitePiece(white_piece_number, 0, column, row);
+                if (FEN[i] == 'R')
+                    SpawnSingleWhitePiece(white_piece_number, 1, column, row);
+                if (FEN[i] == 'H')
+                    SpawnSingleWhitePiece(white_piece_number, 2, column, row);
+                if (FEN[i] == 'B')
+                    SpawnSingleWhitePiece(white_piece_number, 3, column, row);
+                if (FEN[i] == 'Q')
+                    SpawnSingleWhitePiece(white_piece_number, 4, column, row);
+                if (FEN[i] == 'K')
+                    SpawnSingleWhitePiece(white_piece_number, 5, column, row);
+
+                ++white_piece_number;
+                //next spot on the board
+                row = row + 1;
+            }
+            //if black piece
+            //spawn corresponding piece on corresponding square
+            if (FEN[i] > 'a' && FEN[i] < 'z')
+            {
+                if (FEN[i] == 'p')
+                    SpawnSingleBlackPiece(black_piece_number, 0, column, row);
+                if (FEN[i] == 'r')
+                    SpawnSingleBlackPiece(black_piece_number, 1, column, row);
+                if (FEN[i] == 'h')
+                    SpawnSingleBlackPiece(black_piece_number, 2, column, row);
+                if (FEN[i] == 'b')
+                    SpawnSingleBlackPiece(black_piece_number, 3, column, row);
+                if (FEN[i] == 'q')
+                    SpawnSingleBlackPiece(black_piece_number, 4, column, row);
+                if (FEN[i] == 'k')
+                    SpawnSingleBlackPiece(black_piece_number, 5, column, row);
+
+                ++black_piece_number;
+                //next spot on the board
+                row = row + 1;
+            }
+            //if currently checked spot is a character number less than 8
+            //means that there are empty space on board
+            if (FEN[i] >= '0' && FEN[i] <= '8')
+            {
+                //how many empty rows there are
+                int emptyRows = FEN[i] - 48;
+                //skip that many rows
+                row = row + emptyRows;
+            }
+            //new column
+            if (FEN[i] == '/')
+            {
+                column = column - 1;
+                row = 0;
+            }
+        }
+    }
+
+    private void checkForEnPassant(string previousPosition)
+    {
+       
     }
 }

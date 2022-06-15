@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class Queen : ChessPiece
 {
+    Queen()
+    {
+        pieceLetter = (team == 1) ? 'Q' : 'q';
+    }
     public override List<Square> findAllInboundsAndNoCollisionMoves()
     {
         int row = ReturnRowColumn()[0];
