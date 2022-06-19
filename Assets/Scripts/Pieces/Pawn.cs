@@ -129,7 +129,6 @@ public class Pawn : ChessPiece
                     if (Chessboard.instance.squares[row + team, column + team].ReturnSquare() == Chessboard.instance.enPassantSquare)
                     {
                         availableMoves.Add(Chessboard.instance.squares[row + team, column + team]);
-                        Debug.Log("Kaka");
                         Chessboard.instance.enPassantForFEN = true;
                     }
                 }
@@ -138,7 +137,6 @@ public class Pawn : ChessPiece
                     if (Chessboard.instance.squares[row - team, column + team].ReturnSquare() == Chessboard.instance.enPassantSquare)
                     {
                         availableMoves.Add(Chessboard.instance.squares[row - team, column + team]);
-                        Debug.Log("Kaka");
                         Chessboard.instance.enPassantForFEN = true;
                     }
                 }

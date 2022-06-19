@@ -341,6 +341,9 @@ public class Chessboard : MonoBehaviour
             string start_square = moveList[moveList.Count - 1][0].ReturnSquare();
             string end_square = moveList[moveList.Count - 1][1].ReturnSquare();
 
+            Debug.Log("Square jump: " + squareJump);
+            Debug.Log(moveList[moveList.Count - 1][1].pieceOnSquare + " was moved");
+
             if (start_square[1] + squareJump == end_square[1])
             {
                 enPassantSquare = "" + start_square[0] + (char)(start_square[1] + (squareJump/2));        
