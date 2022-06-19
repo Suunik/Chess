@@ -27,7 +27,10 @@ public class Chessboard : MonoBehaviour
     public int previousTurnCounter = 0;
     private string previousPosition;
 
-    public Square enPassantSquare = null;
+    public List<Square[]> moveList = new List<Square[]>();
+
+    public string enPassantSquare = "-";
+    public bool enPassantForFEN = false;
     // Start is called before the first frame update
     void Start()
     {
@@ -36,7 +39,8 @@ public class Chessboard : MonoBehaviour
         //Create all tile objects and assign them a value e.g. d3
         SpawnSquares();
 
-        spawnFENPosition("rhbqkbhr/pppppppp/8/8/8/8/PPPPPPPP/RHBQKBHR");
+        spawnFENPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+        //spawnFENPosition("r1b1kb1r / pp1p2pp / 2pqpn2 / 4Pp2 / 1n3Q1P / 3P2PN / PPP1KP2 / RNB2B1R ");
     }
 
     // Update is called once per frame
@@ -45,7 +49,8 @@ public class Chessboard : MonoBehaviour
 
         if (turnCounter != previousTurnCounter)
         {
-            checkForEnPassant(previousPosition);
+            processSuccessfulEnPassant();
+            checkForEnPassant();  
             //This could be modified to clear all blackPiece availableMoves arrays if its white's turn and vice versa
             foreach (ChessPiece item in whitePieces)
             {
@@ -97,42 +102,6 @@ public class Chessboard : MonoBehaviour
                 squares[column, row].SetSquareName();
             }
         }
-    }
-
-    private void SpawnAllWhitePieces()
-    {
-        //Spawns the pawns
-        for (int i = 0; i < TILE_COUNT_Y; ++i)
-        {
-            SpawnSingleWhitePiece(i, 0, 1, i);
-        }
-
-        SpawnSingleWhitePiece(8, 1, 0, 0);
-        SpawnSingleWhitePiece(9, 2, 0, 1);
-        SpawnSingleWhitePiece(10, 3, 0, 2);
-        SpawnSingleWhitePiece(11, 4, 0, 3);
-        SpawnSingleWhitePiece(12, 5, 0, 4);
-        SpawnSingleWhitePiece(13, 3, 0, 5);
-        SpawnSingleWhitePiece(14, 2, 0, 6);
-        SpawnSingleWhitePiece(15, 1, 0, 7);
-
-    }
-    private void SpawnAllBlackPieces()
-    {
-        // Spawns the pawns
-        for (int i = 0; i < TILE_COUNT_Y; ++i)
-        {
-            SpawnSingleBlackPiece(i, 0, 6, i);
-        }
-
-        SpawnSingleBlackPiece(8, 1, 7, 0);
-        SpawnSingleBlackPiece(9, 2, 7, 1);
-        SpawnSingleBlackPiece(10, 3, 7, 2);
-        SpawnSingleBlackPiece(11, 4, 7, 3);
-        SpawnSingleBlackPiece(12, 5, 7, 4);
-        SpawnSingleBlackPiece(13, 3, 7, 5);
-        SpawnSingleBlackPiece(14, 2, 7, 6);
-        SpawnSingleBlackPiece(15, 1, 7, 7);
     }
     private void SpawnSingleWhitePiece(int PieceNumber, int PiecePrefab, int column, int row)
     {
@@ -258,7 +227,12 @@ public class Chessboard : MonoBehaviour
     {
         string FEN = "";
 
-        FEN = FEN + '-' + ' ';
+        if (enPassantForFEN)
+        {
+            FEN = FEN + enPassantSquare + ' ';
+            enPassantForFEN = false;
+        }
+
         return FEN;
     }
     //turn counter
@@ -303,7 +277,7 @@ public class Chessboard : MonoBehaviour
                     SpawnSingleWhitePiece(white_piece_number, 0, column, row);
                 if (FEN[i] == 'R')
                     SpawnSingleWhitePiece(white_piece_number, 1, column, row);
-                if (FEN[i] == 'H')
+                if (FEN[i] == 'N')
                     SpawnSingleWhitePiece(white_piece_number, 2, column, row);
                 if (FEN[i] == 'B')
                     SpawnSingleWhitePiece(white_piece_number, 3, column, row);
@@ -324,7 +298,7 @@ public class Chessboard : MonoBehaviour
                     SpawnSingleBlackPiece(black_piece_number, 0, column, row);
                 if (FEN[i] == 'r')
                     SpawnSingleBlackPiece(black_piece_number, 1, column, row);
-                if (FEN[i] == 'h')
+                if (FEN[i] == 'n')
                     SpawnSingleBlackPiece(black_piece_number, 2, column, row);
                 if (FEN[i] == 'b')
                     SpawnSingleBlackPiece(black_piece_number, 3, column, row);
@@ -355,8 +329,84 @@ public class Chessboard : MonoBehaviour
         }
     }
 
-    private void checkForEnPassant(string previousPosition)
+    private void checkForEnPassant()
     {
-       
+        if(moveList.Count == 0)
+        {
+            return;
+        }
+        if(moveList[moveList.Count - 1][1].pieceOnSquare == 'P' || moveList[moveList.Count - 1][1].pieceOnSquare == 'p')
+        {
+            int squareJump = (moveList[moveList.Count - 1][1].pieceOnSquare == 'P') ? 2 : -2;
+            string start_square = moveList[moveList.Count - 1][0].ReturnSquare();
+            string end_square = moveList[moveList.Count - 1][1].ReturnSquare();
+
+            Debug.Log("Square jump: " + squareJump);
+            Debug.Log(moveList[moveList.Count - 1][1].pieceOnSquare + " was moved");
+
+            if (start_square[1] + squareJump == end_square[1])
+            {
+                enPassantSquare = "" + start_square[0] + (char)(start_square[1] + (squareJump/2));        
+            }
+            else
+            {
+                enPassantSquare = "-";
+            }
+        }
+        else
+        {
+            enPassantSquare = "-";         
+        }
+        Debug.Log("Enpassant Square: " + enPassantSquare);
+    }
+    private void processSuccessfulEnPassant()
+    {
+        if(moveList.Count == 0)
+        {
+            return;
+        }
+        //if there is a enPassant square
+        if(enPassantSquare != "-")
+        {
+            //if last move was made by pawn
+            if (moveList[moveList.Count - 1][1].pieceOnSquare == 'P' || moveList[moveList.Count - 1][1].pieceOnSquare == 'p')
+            {
+                //if last move was made to enpassant square
+                if (moveList[moveList.Count - 1][1].ReturnSquare() == enPassantSquare)
+                {
+                    //check for the enemy piece to delete
+                    for(int i = 0; i < whitePieces.Count; ++i)
+                    {
+                        string arg1 = whitePieces[i].currentSquare.ReturnSquare();
+                        string arg2 = "";
+                        arg2 += enPassantSquare[0];
+                        arg2 += (char)(enPassantSquare[1] + 1);
+                        if (arg1 == arg2)
+                        {
+                            whitePieces[i].currentSquare.team = 0;
+                            whitePieces[i].killYourself();
+                            whitePieces.Remove(whitePieces[i]);
+                            break;
+                        }
+                    }
+                    //check for the enemy piece to delete
+                    for (int i = 0; i < blackPieces.Count; ++i)
+                    {
+                        string arg1 = blackPieces[i].currentSquare.ReturnSquare();
+                        string arg2 = "";
+                        arg2 += enPassantSquare[0];
+                        arg2 += (char)(enPassantSquare[1] - 1);
+
+                        if ( arg1==arg2 )
+                        {
+                            blackPieces[i].currentSquare.team = 0;
+                            blackPieces[i].killYourself();
+                            blackPieces.Remove(blackPieces[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 }

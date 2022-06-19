@@ -130,6 +130,8 @@ public abstract class ChessPiece : MonoBehaviour
                         //And clear availableMoves, otherwise it will remain available for the next move
                         if (transform.position == availableMoves[i].transform.position)
                         {
+                            //remember moves made
+                            Chessboard.instance.moveList.Add(new Square[]{ currentSquare, availableMoves[i] });
                             //change currentsquare team then assign new square to piece
                             currentSquare.team = 0;
                             //remove piece letter from square
@@ -276,7 +278,7 @@ public abstract class ChessPiece : MonoBehaviour
         transform.localScale = new Vector2(transform.localScale.x + value, transform.localScale.y + value);
     }
 
-    private void killYourself()
+    public void killYourself()
     {
         Destroy(gameObject);
     }

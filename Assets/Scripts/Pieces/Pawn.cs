@@ -51,6 +51,7 @@ public class Pawn : ChessPiece
             {
                 availableMoves.Add(Chessboard.instance.squares[row + team, column + team]);
             }
+
         }
         if (WithinBounds(row - team, column + team))
         {
@@ -65,6 +66,7 @@ public class Pawn : ChessPiece
     {
         availableMoves.AddRange(findAllInboundsAndNoCollisionMoves());
         availableMoves.AddRange(findPawnAttackSquares());
+        availableMoves.AddRange(enPassantCheck());
         return availableMoves;
     }
     public override List<Square> findPieceAttackingMoves()
@@ -106,5 +108,42 @@ public class Pawn : ChessPiece
             }
         }
         return result;
+    }
+    private List<Square> enPassantCheck()
+    {
+        List<Square> result = new List<Square>();
+        if(Chessboard.instance.moveList.Count == 0)
+        {
+            return result;
+        }
+        else if (Chessboard.instance.moveList[Chessboard.instance.moveList.Count - 1][1].team != team)
+        {
+            
+            if (Chessboard.instance.enPassantSquare != "-")
+            {
+                int row = ReturnRowColumn()[0];
+                int column = ReturnRowColumn()[1];
+
+                if (WithinBounds(row + team, column + team))
+                {
+                    if (Chessboard.instance.squares[row + team, column + team].ReturnSquare() == Chessboard.instance.enPassantSquare)
+                    {
+                        availableMoves.Add(Chessboard.instance.squares[row + team, column + team]);
+                        Chessboard.instance.enPassantForFEN = true;
+                    }
+                }
+                if (WithinBounds(row - team, column + team))
+                {
+                    if (Chessboard.instance.squares[row - team, column + team].ReturnSquare() == Chessboard.instance.enPassantSquare)
+                    {
+                        availableMoves.Add(Chessboard.instance.squares[row - team, column + team]);
+                        Chessboard.instance.enPassantForFEN = true;
+                    }
+                }
+                return result;
+            }
+        }
+        return result;
+
     }
 }

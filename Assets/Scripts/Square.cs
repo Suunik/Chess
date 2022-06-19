@@ -11,7 +11,7 @@ public class Square : MonoBehaviour
     private Color SquareColor;
     
     public int team;
-    //sets to 1 if empty
+    //sets to 0 if empty
     public char pieceOnSquare;
 
     private Rect rect;
