@@ -144,6 +144,5 @@ public class Pawn : ChessPiece
             }
         }
         return result;
-
     }
 }

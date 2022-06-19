@@ -23,14 +23,20 @@ public class Chessboard : MonoBehaviour
 
     public Square squarePrefab;
 
+    //Game controlling
     public int turnCounter = 1;
     public int previousTurnCounter = 0;
     private string previousPosition;
 
     public List<Square[]> moveList = new List<Square[]>();
 
+    //special moves
+    //En Passant
     public string enPassantSquare = "-";
     public bool enPassantForFEN = false;
+    //Castling
+    public List<string> castleSquare = new List<string>();
+
     // Start is called before the first frame update
     void Start()
     {
@@ -46,7 +52,6 @@ public class Chessboard : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
         if (turnCounter != previousTurnCounter)
         {
             processSuccessfulEnPassant();
@@ -341,9 +346,6 @@ public class Chessboard : MonoBehaviour
             string start_square = moveList[moveList.Count - 1][0].ReturnSquare();
             string end_square = moveList[moveList.Count - 1][1].ReturnSquare();
 
-            Debug.Log("Square jump: " + squareJump);
-            Debug.Log(moveList[moveList.Count - 1][1].pieceOnSquare + " was moved");
-
             if (start_square[1] + squareJump == end_square[1])
             {
                 enPassantSquare = "" + start_square[0] + (char)(start_square[1] + (squareJump/2));        
@@ -357,7 +359,6 @@ public class Chessboard : MonoBehaviour
         {
             enPassantSquare = "-";         
         }
-        Debug.Log("Enpassant Square: " + enPassantSquare);
     }
     private void processSuccessfulEnPassant()
     {
@@ -408,5 +409,36 @@ public class Chessboard : MonoBehaviour
                 }
             }
         }
+    }
+    public List<ChessPiece> findAvailableRookForCastleing()
+    {
+        List<ChessPiece> rooks_found = new List<ChessPiece>();
+
+        foreach(ChessPiece piece in whitePieces)
+        {
+            if (piece.firstMove)
+            {
+                if (piece.pieceLetter == 'R')
+                {
+                    rooks_found.Add(piece);
+                }
+            }
+        }
+        foreach (ChessPiece piece in blackPieces)
+        {
+            if (piece.firstMove)
+            {
+                if (piece.pieceLetter == 'r')
+                {
+                    rooks_found.Add(piece);
+                }
+            }
+        }
+        return rooks_found;
+    }
+
+    public void processSuccessfulCastle()
+    {
+
     }
 }
