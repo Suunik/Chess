@@ -6,7 +6,7 @@ public class Rook : ChessPiece
 {
     Rook()
     {
-        pieceLetter = (team == 1) ? 'R' : 'r';
+
     }
 
     public override List<Square> findAllInboundsAndNoCollisionMoves()

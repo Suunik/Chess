@@ -7,7 +7,6 @@ public class Knight : ChessPiece
     Knight()
     {
         movementMatrix = new int[,]{ {1, 2}, { 2, 1}, { -1, 2}, { 1, -2}, { -1, -2}, { -2, -1}, { 2, -1}, { -2, 1} };
-        pieceLetter = (team == 1) ? 'K' : 'k';
     }
 
     public override List<Square> findAllInboundsAndNoCollisionMoves()

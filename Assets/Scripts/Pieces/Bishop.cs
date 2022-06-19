@@ -4,10 +4,6 @@ using UnityEngine;
 
 public class Bishop : ChessPiece
 {
-    Bishop()
-    {
-        pieceLetter = (team == 1) ? 'B' : 'b';
-    }
     public override List<Square> findAllInboundsAndNoCollisionMoves()
     {
         int row = ReturnRowColumn()[0];

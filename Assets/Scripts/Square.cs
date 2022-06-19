@@ -9,17 +9,14 @@ public class Square : MonoBehaviour
 
     private SpriteRenderer spriterenderer;
     private Color SquareColor;
+    public Sprite EnemyOnSquare;
     
     public int team;
-    //sets to 1 if empty
-    public char pieceOnSquare;
 
-    private Rect rect;
+    public Rect rect;
 
     private void Awake()
     {
-        pieceOnSquare = '0';
-
         spriterenderer = GetComponent<SpriteRenderer>();
         
         SquareColor = spriterenderer.color;
@@ -81,6 +78,13 @@ public class Square : MonoBehaviour
     public void TransparentSquare()
     {
         SquareColor.a = 0f;
+        spriterenderer.color = SquareColor;
+    }
+    public void SetEnemySquare()
+    {
+        spriterenderer.sprite = EnemyOnSquare;
+        spriterenderer.size = new Vector2(2.1f, 2.1f);
+        SquareColor = new Color(0.6f, 0.13f, 0, 0.7f);
         spriterenderer.color = SquareColor;
     }
 }
