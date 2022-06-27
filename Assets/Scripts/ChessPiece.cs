@@ -5,7 +5,6 @@ using UnityEngine;
 
 public abstract class ChessPiece : MonoBehaviour
 {
-    // Start is called before the first frame update
     public Square currentSquare;
     protected int[,] movementMatrix;
     protected int pieceNumber;
@@ -15,11 +14,15 @@ public abstract class ChessPiece : MonoBehaviour
 
     private Rect Hitbox;
     private bool pieceHeld;
-    protected bool firstMove;
+    public bool firstMove;
 
     public int team;
     public bool kingAttacker;
-    
+    private void Start()
+    {
+        firstMove = true;
+    }
+
     //This is for getting all moves if there were no king restrictions
     public abstract List<Square> FindAvailableMoves();
     public abstract List<Square> findAllInboundsAndNoCollisionMoves();

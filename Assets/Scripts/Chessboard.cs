@@ -23,14 +23,20 @@ public class Chessboard : MonoBehaviour
 
     public Square squarePrefab;
 
+    //Game controlling
     public int turnCounter = 1;
     public int previousTurnCounter = 0;
     private string previousPosition;
 
     public List<Square[]> moveList = new List<Square[]>();
 
+    //special moves
+    //En Passant
     public string enPassantSquare = "-";
     public bool enPassantForFEN = false;
+    //Castling
+    public List<string> castleSquare = new List<string>();
+
     // Start is called before the first frame update
     void Start()
     {
@@ -46,14 +52,16 @@ public class Chessboard : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
         if (turnCounter != previousTurnCounter)
         {
             processSuccessfulEnPassant();
-            checkForEnPassant();  
+            checkForEnPassant();
+            processSuccessfulCastle();
+            castleSquare.Clear();
             //This could be modified to clear all blackPiece availableMoves arrays if its white's turn and vice versa
             foreach (ChessPiece item in whitePieces)
             {
+                checkForPawnTransformation(item);
                 item.availableMoves.Clear();
                 //Calculate availablemoves for every piece once per turn
                 item.FindAvailableMoves();
@@ -328,7 +336,7 @@ public class Chessboard : MonoBehaviour
             }
         }
     }
-
+    //special moves
     private void checkForEnPassant()
     {
         if(moveList.Count == 0)
@@ -340,9 +348,6 @@ public class Chessboard : MonoBehaviour
             int squareJump = (moveList[moveList.Count - 1][1].pieceOnSquare == 'P') ? 2 : -2;
             string start_square = moveList[moveList.Count - 1][0].ReturnSquare();
             string end_square = moveList[moveList.Count - 1][1].ReturnSquare();
-
-            Debug.Log("Square jump: " + squareJump);
-            Debug.Log(moveList[moveList.Count - 1][1].pieceOnSquare + " was moved");
 
             if (start_square[1] + squareJump == end_square[1])
             {
@@ -357,7 +362,6 @@ public class Chessboard : MonoBehaviour
         {
             enPassantSquare = "-";         
         }
-        Debug.Log("Enpassant Square: " + enPassantSquare);
     }
     private void processSuccessfulEnPassant()
     {
@@ -409,4 +413,183 @@ public class Chessboard : MonoBehaviour
             }
         }
     }
+    public List<ChessPiece> findAvailableRookForCastleing()
+    {
+        List<ChessPiece> rooks_found = new List<ChessPiece>();
+
+        foreach(ChessPiece piece in whitePieces)
+        {
+            if (piece.firstMove)
+            {
+                if (piece.pieceLetter == 'R')
+                {
+                    rooks_found.Add(piece);
+                }
+            }
+        }
+        foreach (ChessPiece piece in blackPieces)
+        {
+            if (piece.firstMove)
+            {
+                if (piece.pieceLetter == 'r')
+                {
+                    rooks_found.Add(piece);
+                }
+            }
+        }
+        return rooks_found;
+    }
+    public void processSuccessfulCastle()
+    {
+        //returns if first move
+        if(moveList.Count == 0)
+        {
+            return;
+        }
+
+        //check if there is a castleing opportunity
+        if(castleSquare.Count != 0)
+        {
+            //check if last move was made by king
+            if(moveList[moveList.Count - 1][1].pieceOnSquare == 'K' || moveList[moveList.Count - 1][1].pieceOnSquare == 'k')
+            {
+                //loops through all possible castleingsquares (Should be max 2)
+                foreach (string castlingSquare in castleSquare)
+                {
+                    //if last move was made by king onto castleing square
+                    if (moveList[moveList.Count - 1][1].ReturnSquare() == castlingSquare)
+                    {
+                        //check which side king moved to
+                        //Comparing kings original position against kings current position
+                        //calling returnsquare function and comparing only the rows
+                        if (moveList[moveList.Count - 1][0].ReturnSquare()[0] < moveList[moveList.Count - 1][1].ReturnSquare()[0])
+                        {
+                            if (moveList[moveList.Count - 1][1].pieceOnSquare == 'K')
+                            {
+                                //find the rook thats on the right
+                                //loop through all the pieces
+                                foreach (ChessPiece piece in whitePieces)
+                                {
+                                    //if we found a rook
+                                    if (piece.pieceLetter == 'R')
+                                    {
+                                        //check if its on the right side
+                                        if (moveList[moveList.Count - 1][1].ReturnSquare()[0] < piece.currentSquare.ReturnSquare()[0])
+                                        {
+                                            //forget rooks current squares team and letter
+                                            piece.currentSquare.team = 0;
+                                            piece.currentSquare.pieceOnSquare = '0';
+                                            //move the rook to the other side of the king
+                                            piece.transform.position = squares[(castlingSquare[0] - 97 - 1), 0].transform.position;
+                                            //assign new square to the rook
+                                            piece.currentSquare = squares[(castlingSquare[0] - 97 - 1), 0];
+                                            piece.currentSquare.team = piece.team;
+                                            piece.currentSquare.pieceOnSquare = 'R';
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                foreach (ChessPiece piece in blackPieces)
+                                {
+                                    //if we found a rook
+                                    if (piece.pieceLetter == 'r')
+                                    {
+                                        //check if its on the right side
+                                        if (moveList[moveList.Count - 1][1].ReturnSquare()[0] < piece.currentSquare.ReturnSquare()[0])
+                                        {
+                                            //forget rooks current squares team and letter
+                                            piece.currentSquare.team = 0;
+                                            piece.currentSquare.pieceOnSquare = '0';
+                                            //move the rook to the other side of the king
+                                            piece.transform.position = squares[(castlingSquare[0] - 97 - 1), 7].transform.position;
+                                            //assign new square to the rook
+                                            piece.currentSquare = squares[(castlingSquare[0] - 97 - 1), 7];
+                                            piece.currentSquare.team = piece.team;
+                                            piece.currentSquare.pieceOnSquare = 'r';
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                        //if king moved to the left
+                        if (moveList[moveList.Count - 1][0].ReturnSquare()[0] > moveList[moveList.Count - 1][1].ReturnSquare()[0])
+                        {
+                            if (moveList[moveList.Count - 1][1].pieceOnSquare == 'K')
+                            {
+                                //find the rook thats on the left
+                                //loop through all the pieces
+                                foreach (ChessPiece piece in whitePieces)
+                                {
+                                    //if we found a rook
+                                    if (piece.pieceLetter == 'R')
+                                    {
+                                        //check if its on the right side
+                                        if (moveList[moveList.Count - 1][1].ReturnSquare()[0] > piece.currentSquare.ReturnSquare()[0])
+                                        {
+                                            //forget rooks current squares team and letter
+                                            piece.currentSquare.team = 0;
+                                            piece.currentSquare.pieceOnSquare = '0';
+                                            //move the rook to the other side of the king
+                                            piece.transform.position = squares[(castlingSquare[0] - 97 + 1), 0].transform.position;
+                                            //assign new square to the rook
+                                            piece.currentSquare = squares[(castlingSquare[0] - 97 + 1), 0];
+                                            piece.currentSquare.team = piece.team;
+                                            piece.currentSquare.pieceOnSquare = 'R';
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                foreach (ChessPiece piece in blackPieces)
+                                {
+                                    //if we found a rook
+                                    if (piece.pieceLetter == 'r')
+                                    {
+                                        //check if its on the right side
+                                        if (moveList[moveList.Count - 1][1].ReturnSquare()[0] > piece.currentSquare.ReturnSquare()[0])
+                                        {
+                                            //forget rooks current squares team and letter
+                                            piece.currentSquare.team = 0;
+                                            piece.currentSquare.pieceOnSquare = '0';
+                                            //move the rook to the other side of the king
+                                            piece.transform.position = squares[(castlingSquare[0] - 97 + 1), 7].transform.position;
+                                            //assign new square to the rook
+                                            piece.currentSquare = squares[(castlingSquare[0] - 97 + 1), 7];
+                                            piece.currentSquare.team = piece.team;
+                                            piece.currentSquare.pieceOnSquare = 'r';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    private void checkForPawnTransformation(ChessPiece piece)
+    {
+        if (piece.pieceLetter == 'P')
+        {
+            int pawn_row = piece.currentSquare.ReturnSquare()[0] - 97;
+            int pawn_column = piece.currentSquare.ReturnSquare()[1] - 49;
+            
+            int pieceNumber = whitePieces.Count;
+
+            if (pawn_column == 7)
+            {
+                Debug.Log("White pieces count before deleting: " + whitePieces.Count);
+                piece.killYourself();
+                whitePieces.Remove(piece);
+                Debug.Log("White pieces count after deleting: " + whitePieces.Count);
+                whitePieces.Add(whitePieces[whitePieces.Count]);
+                SpawnSingleWhitePiece((whitePieces.Count), 4, pawn_column, pawn_row);
+            }
+        }
+    }
+
 }

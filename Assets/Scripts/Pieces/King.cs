@@ -32,6 +32,77 @@ public class King : ChessPiece
         }
         return result;
     }
+    public List<Square> findCastleMoves()
+    {
+        
+        List<Square> result = new List<Square>();
+        int king_row = currentSquare.ReturnSquare()[0]- 97;
+        int king_column = (team == 1) ? 0 : 7;
+
+        List<Square> enemyAttackSquares = new List<Square>();
+        //checks if it's kings first move
+        if (firstMove)
+        {
+            //save the rook that hasnt moved yet
+            List<ChessPiece> rooks_found = Chessboard.instance.findAvailableRookForCastleing();
+            //loop through every not moved rook we found
+            foreach (ChessPiece rook in rooks_found)
+            {
+                //remember the rooks row we are currently testing
+                int rook_row = rook.currentSquare.ReturnSquare()[0] - 97;
+                //check if the rook we found is in our team
+                if (rook.team == team)
+                {
+                    enemyAttackSquares.AddRange(Chessboard.instance.allTeamCoveredSquares(-team));
+                    //find out on which side the rook is positioned from the king
+                    if ((king_row + 3) == rook_row)
+                    {
+                        //check if path to the rook is clear from pieces and enemy attack moves
+                        if (Chessboard.instance.squares[king_row + 1, king_column].team == 0)
+                        {
+                            if (!enemyAttackSquares.Contains(Chessboard.instance.squares[king_row + 1, king_column]))
+                            {
+                                if (Chessboard.instance.squares[king_row + 2, king_column].team == 0)
+                                {
+                                    if (!enemyAttackSquares.Contains(Chessboard.instance.squares[king_row + 2, king_column]))
+                                    {
+                                        result.Add(Chessboard.instance.squares[king_row + 2, king_column]);
+                                        Chessboard.instance.castleSquare.Add("" + (char)(king_row + 97 + 2) + (char)(king_column + 49));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    //find out on which side the rook is positioned from the king
+                    if (king_row - 4 == rook_row)
+                    {
+                        //check if path to the rook is clear from other pieces and enemy attack moves
+                        if (Chessboard.instance.squares[king_row - 1, king_column].team == 0)
+                        {
+                            if (!enemyAttackSquares.Contains(Chessboard.instance.squares[king_row - 1, king_column]))
+                            {
+                                if (Chessboard.instance.squares[king_row - 2, king_column].team == 0)
+                                {
+                                    if (!enemyAttackSquares.Contains(Chessboard.instance.squares[king_row - 2, king_column]))
+                                    {
+                                        if (Chessboard.instance.squares[king_row - 3, king_column].team == 0)
+                                        {
+                                            if (!enemyAttackSquares.Contains(Chessboard.instance.squares[king_row -3, king_column]))
+                                            {
+                                                result.Add(Chessboard.instance.squares[king_row - 2, king_column]);
+                                                Chessboard.instance.castleSquare.Add("" + (char)(king_row + 97 - 2) + (char)(king_column + 49));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
     public override void restrictMovements()
     {
         //remember all enemy attack squares
@@ -69,6 +140,7 @@ public class King : ChessPiece
     public override List<Square> FindAvailableMoves()
     {
         availableMoves.AddRange(findAllInboundsAndNoCollisionMoves());
+        availableMoves.AddRange(findCastleMoves());
         if (team == 1)
         {
             Chessboard.instance.whiteKingSquare = currentSquare;

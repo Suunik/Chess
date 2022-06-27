@@ -100,5 +100,6 @@ MonoBehaviour:
   currentSquare: {fileID: 0}
   availableMoves: []
   pieceLetter: 80
-  team: 0
+  firstMove: 1
+  team: 1
   kingAttacker: 0

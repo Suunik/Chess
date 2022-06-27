@@ -98,4 +98,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentSquare: {fileID: 0}
-  PieceNumber: 2
+  availableMoves: []
+  pieceLetter: 78
+  firstMove: 0
+  team: 1
+  kingAttacker: 0
