@@ -304,23 +304,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d118509e02a67394ab70ed999b611326, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  whitePieces:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  whitePieces: []
   blackPieces:
   - {fileID: 0}
   - {fileID: 0}
@@ -338,6 +322,10 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  allWhiteMoves: []
+  allBlackMoves: []
+  whiteKingSquare: {fileID: 0}
+  blackKingSquare: {fileID: 0}
   whitePiecePrefab:
   - {fileID: 4075600888481978012, guid: 67293b88e7257ca4695e18e558f76dec, type: 3}
   - {fileID: 6438969968164384872, guid: 5dfd59d777687c34d8f4d763f59859dd, type: 3}
@@ -353,3 +341,8 @@ MonoBehaviour:
   - {fileID: 3403793190287374700, guid: 1fa61b8afc0b5b842a922fcc3d921b5e, type: 3}
   - {fileID: 2451919448347802767, guid: 83d28e8f8a308284ea309df6a3908f81, type: 3}
   squarePrefab: {fileID: 8323093709090922554, guid: 248a3f8685466fc4a934998f4e083ce3, type: 3}
+  turnCounter: 1
+  previousTurnCounter: 0
+  enPassantSquare: '-'
+  enPassantForFEN: 0
+  castleSquare: []

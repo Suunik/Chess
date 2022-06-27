@@ -10,8 +10,8 @@ public class Chessboard : MonoBehaviour
     public Square[,] squares = new Square[TILE_COUNT_X, TILE_COUNT_Y];
 
     //Piece array for chessboard
-    public List<ChessPiece> whitePieces;
-    public List<ChessPiece> blackPieces;
+    public List<ChessPiece> whitePieces = new List<ChessPiece>();
+    public List<ChessPiece> blackPieces = new List<ChessPiece>();
     public List<Square> allWhiteMoves = null;
     public List<Square> allBlackMoves = null;
     public Square whiteKingSquare;
@@ -113,13 +113,13 @@ public class Chessboard : MonoBehaviour
     }
     private void SpawnSingleWhitePiece(int PieceNumber, int PiecePrefab, int column, int row)
     {
-        whitePieces[PieceNumber] = Instantiate(whitePiecePrefab[PiecePrefab], squares[row, column].transform.position, Quaternion.identity);
+        ChessPiece whiteObject = Instantiate(whitePiecePrefab[PiecePrefab], squares[row, column].transform.position, Quaternion.identity);
+        whitePieces.Add(whiteObject);
+        whitePieces[whitePieces.Count - 1].currentSquare = squares[row, column];
+        whitePieces[whitePieces.Count - 1].team = 1;
+        whitePieces[whitePieces.Count - 1].currentSquare.team = 1;
 
-        whitePieces[PieceNumber].currentSquare = squares[row, column];
-        whitePieces[PieceNumber].team = 1;
-        whitePieces[PieceNumber].currentSquare.team = 1;
-
-        squares[row, column].pieceOnSquare = whitePieces[PieceNumber].pieceLetter;
+        squares[row, column].pieceOnSquare = whitePieces[whitePieces.Count - 1].pieceLetter;
     }
     private void SpawnSingleBlackPiece(int PieceNumber, int PiecePrefab, int column, int row)
     {
@@ -583,11 +583,10 @@ public class Chessboard : MonoBehaviour
             if (pawn_column == 7)
             {
                 Debug.Log("White pieces count before deleting: " + whitePieces.Count);
-                piece.killYourself();
                 whitePieces.Remove(piece);
+                piece.killYourself();
                 Debug.Log("White pieces count after deleting: " + whitePieces.Count);
-                whitePieces.Add(whitePieces[whitePieces.Count]);
-                SpawnSingleWhitePiece((whitePieces.Count), 4, pawn_column, pawn_row);
+                SpawnSingleWhitePiece(whitePieces.Count, 4, pawn_column, pawn_row);
             }
         }
     }
