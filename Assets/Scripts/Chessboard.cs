@@ -61,6 +61,7 @@ public class Chessboard : MonoBehaviour
             //This could be modified to clear all blackPiece availableMoves arrays if its white's turn and vice versa
             foreach (ChessPiece item in whitePieces)
             {
+                checkForPawnTransformation(item);
                 item.availableMoves.Clear();
                 //Calculate availablemoves for every piece once per turn
                 item.FindAvailableMoves();
@@ -335,7 +336,7 @@ public class Chessboard : MonoBehaviour
             }
         }
     }
-
+    //special moves
     private void checkForEnPassant()
     {
         if(moveList.Count == 0)
@@ -513,6 +514,7 @@ public class Chessboard : MonoBehaviour
                             }
 
                         }
+                        //if king moved to the left
                         if (moveList[moveList.Count - 1][0].ReturnSquare()[0] > moveList[moveList.Count - 1][1].ReturnSquare()[0])
                         {
                             if (moveList[moveList.Count - 1][1].pieceOnSquare == 'K')
@@ -569,4 +571,25 @@ public class Chessboard : MonoBehaviour
             }
         }
     }
+    private void checkForPawnTransformation(ChessPiece piece)
+    {
+        if (piece.pieceLetter == 'P')
+        {
+            int pawn_row = piece.currentSquare.ReturnSquare()[0] - 97;
+            int pawn_column = piece.currentSquare.ReturnSquare()[1] - 49;
+            
+            int pieceNumber = whitePieces.Count;
+
+            if (pawn_column == 7)
+            {
+                Debug.Log("White pieces count before deleting: " + whitePieces.Count);
+                piece.killYourself();
+                whitePieces.Remove(piece);
+                Debug.Log("White pieces count after deleting: " + whitePieces.Count);
+                whitePieces.Add(whitePieces[whitePieces.Count]);
+                SpawnSingleWhitePiece((whitePieces.Count), 4, pawn_column, pawn_row);
+            }
+        }
+    }
+
 }
