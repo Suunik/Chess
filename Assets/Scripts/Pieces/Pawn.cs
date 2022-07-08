@@ -112,13 +112,10 @@ public class Pawn : ChessPiece
     private List<Square> enPassantCheck()
     {
         List<Square> result = new List<Square>();
-        if(Chessboard.instance.moveList.Count == 0)
-        {
-            return result;
-        }
-        else if (Chessboard.instance.moveList[Chessboard.instance.moveList.Count - 1][1].team != team)
-        {
-            
+        int team_turn = (Chessboard.instance.whiteTurn) ? 1 : -1;
+
+        if (team_turn == team)
+        {       
             if (Chessboard.instance.enPassantSquare != "-")
             {
                 int row = ReturnRowColumn()[0];

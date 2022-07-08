@@ -26,14 +26,14 @@ public class Chessboard : MonoBehaviour
     //Game controlling
     public int turnCounter = 1;
     public int previousTurnCounter = 0;
-    bool whiteTurn = true;
+    public bool whiteTurn = true;
 
     public List<Square[]> moveList = new List<Square[]>();
 
     //special moves
     //En Passant
     public string enPassantSquare = "-";
-    public bool enPassantForFEN = false;
+    public bool enPassantForFEN;
     //Castling
     public List<string> castleSquare = new List<string>();
 
@@ -46,8 +46,8 @@ public class Chessboard : MonoBehaviour
         //Create all tile objects and assign them a value e.g. d3
         SpawnSquares();
 
-        spawnFENPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 1");
-        //spawnFENPosition("r1bqkbnr/ppppp2p/n5p1/4Pp2/8/8/PPPPKPPP/RNBQ1BNR w kq f6 7");
+        //spawnFENPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 1");
+        spawnFENPosition("1r1qkb1r/p1p1ppp1/4bn1p/1pPp4/1n1N3P/3PB1P1/PP2PP1R/RN1QKB2 w Qk b6 17");
     }
 
     // Update is called once per frame
@@ -55,23 +55,6 @@ public class Chessboard : MonoBehaviour
     {
         if (turnCounter != previousTurnCounter)
         {
-            Debug.Log("whiteturn is: " + whiteTurn);
-            Debug.Log("EnPassantSquare is: " + enPassantSquare);
-            Debug.Log("turncounter: " + turnCounter);
-            foreach (ChessPiece item in whitePieces)
-            {
-                if(item.pieceLetter =='K')
-                Debug.Log("white king firstmove: " + item.firstMove);
-                if(item.pieceLetter == 'R')
-                Debug.Log("white rook firstmove: " + item.firstMove);
-            }
-            foreach(ChessPiece item in blackPieces)
-            {
-                if (item.pieceLetter == 'k')
-                    Debug.Log("black king firstmove: " + item.firstMove);
-                if (item.pieceLetter == 'r')
-                    Debug.Log("black rook firstmove: " + item.firstMove);
-            }
             List<ChessPiece> pieces = (whiteTurn) ? whitePieces : blackPieces;
             //clear previous moves
             foreach(ChessPiece item in pieces)
@@ -350,7 +333,6 @@ public class Chessboard : MonoBehaviour
         if (enPassantForFEN)
         {
             FEN = FEN + enPassantSquare + ' ';
-            enPassantForFEN = false;
         }
         else
         {
@@ -388,9 +370,15 @@ public class Chessboard : MonoBehaviour
         int row = 0;
         int column = 7;
         //needed for third FEN section(castling)
-
+        //because we need to set kings and rooks firstmove to false only once
+        int castle_loop_counter = 0;
+        //remember kings location
+        string white_king_position = null;
+        string black_king_position = null;
         //needed for fourth FEN section(EnPassant)
         int enPassant_letter_count = 0;
+        //needed for fifth FEN section(Turn counter)
+        int turncounter_string_count=0;
         //loop the whole FEN code
         for (int i = 0; i < FEN.Length; ++i)
         {
@@ -406,7 +394,15 @@ public class Chessboard : MonoBehaviour
                     if (FEN[i] > 'A' && FEN[i] < 'Z')
                     {
                         if (FEN[i] == 'P')
+                        {
                             SpawnSingleWhitePiece(0, column, row);
+                            //if white pawn is not spawned on the second column
+                            //means it has moved
+                            if(column != 1)
+                            {
+                                whitePieces[whitePieces.Count - 1].firstMove = false;
+                            }
+                        }
                         if (FEN[i] == 'R')
                             SpawnSingleWhitePiece(1, column, row);
                         if (FEN[i] == 'N')
@@ -426,7 +422,15 @@ public class Chessboard : MonoBehaviour
                     if (FEN[i] > 'a' && FEN[i] < 'z')
                     {
                         if (FEN[i] == 'p')
+                        {
                             SpawnSingleBlackPiece(0, column, row);
+                            //if black pawn is not spawned on the 7th column
+                            //means it has moved and firstmove is false
+                            if(column != 6)
+                            {
+                                blackPieces[blackPieces.Count - 1].firstMove = false;
+                            }
+                        }
                         if (FEN[i] == 'r')
                             SpawnSingleBlackPiece(1, column, row);
                         if (FEN[i] == 'n')
@@ -463,16 +467,138 @@ public class Chessboard : MonoBehaviour
                     whiteTurn = (FEN[i] == 'w') ? true : false;
                 }
                 //check if there is castling available
-                //needs work
                 if (whitespace_counter == 2)
                 {
-                    for (int x = 0; x < whitePieces.Count; ++x)
+                    //remember how many times white or black can castle
+                    //if more than one, means that king hasnt moved yet
+                    int white_castle_counter = 0;
+                    int black_castle_counter = 0;
+                    //need to set firstmoves only once here
+                    if (castle_loop_counter == 0)
                     {
-                        if (FEN[i] == 'K')
+                        //set firstmove of rooks and king to false by default
+                        //so we can set them back to true if needed
+                        foreach (ChessPiece whitePiece in whitePieces)
                         {
-                            if(whitePieces[x].pieceLetter == 'R' && whitePieces[x].currentSquare.ReturnSquare()[0] == 'h')
+                            if (whitePiece.pieceLetter == 'K')
                             {
-                                whitePieces[x].firstMove = true;
+                                whitePiece.firstMove = false;
+                                //also remember the kings position
+                                white_king_position = whitePiece.currentSquare.ReturnSquare();
+                            }
+                            if (whitePiece.pieceLetter == 'R')
+                            {
+                                whitePiece.firstMove = false;
+                            }
+                        }
+                        foreach (ChessPiece blackPiece in blackPieces)
+                        {
+                            if (blackPiece.pieceLetter == 'k')
+                            {
+                                blackPiece.firstMove = false;
+                                //also remember the kings position
+                                black_king_position = blackPiece.currentSquare.ReturnSquare();
+                            }
+                            if (blackPiece.pieceLetter == 'r')
+                            {
+                                blackPiece.firstMove = false;
+                            }
+                        }
+                        ++castle_loop_counter;
+                    }
+                    //Means that white king can castle Kingside
+                    if (FEN[i] == 'K')
+                    {
+                        //when king is found we should find kingside Rook
+                        foreach (ChessPiece whiteRook in whitePieces)
+                        {
+                            //if we found the rook
+                            if (whiteRook.pieceLetter == 'R')
+                            {
+                                //if rook is on the right(Kingside)
+                                if (whiteRook.currentSquare.ReturnSquare()[0] > white_king_position[0])
+                                {
+                                    whiteRook.firstMove = true;
+                                    ++white_castle_counter;
+                                }
+                            }
+                        }
+                    }
+                    //means that white king can castle queenside
+                    if (FEN[i] == 'Q')
+                    {
+                        //when king is found we should find queenside Rook
+                        foreach (ChessPiece whiteRook in whitePieces)
+                        {
+                            //if we found the rook
+                            if (whiteRook.pieceLetter == 'R')
+                            {
+                                //if rook is on the left(Queenside)
+                                if (whiteRook.currentSquare.ReturnSquare()[0] < white_king_position[0])
+                                {
+                                    whiteRook.firstMove = true;
+                                    ++white_castle_counter;
+                                }
+                            }
+                        }
+                    }
+                    //means that black can castle kingside
+                    if (FEN[i] == 'k')
+                    {
+                        //find a rook
+                        foreach (ChessPiece blackRook in blackPieces)
+                        {
+                            //if we found the rook
+                            if (blackRook.pieceLetter == 'r')
+                            {
+                                //if rook is on the right(Kingside)
+                                if (blackRook.currentSquare.ReturnSquare()[0] > black_king_position[0])
+                                {
+                                    blackRook.firstMove = true;
+                                    ++black_castle_counter;
+                                }
+                            }
+                        }
+                    }
+                    //means that black can castle queenside
+                    if (FEN[i] == 'q')
+                    {
+                        //find a rook
+                        foreach (ChessPiece blackRook in blackPieces)
+                        {
+                            //if we found the rook
+                            if (blackRook.pieceLetter == 'r')
+                            {
+                                //if rook is on the left(Queenside)
+                                if (blackRook.currentSquare.ReturnSquare()[0] < black_king_position[0])
+                                {
+                                    Debug.Log("Kaka");
+                                    blackRook.firstMove = true;
+                                    ++black_castle_counter;
+                                }
+                            }
+                        }
+                    }
+                    //see if we can castle
+                    if (white_castle_counter > 0)
+                    {
+                        //if yes we can set kings firstmove to true
+                        foreach(ChessPiece piece in whitePieces)
+                        {
+                            if(piece.pieceLetter == 'K')
+                            {
+                                piece.firstMove = true;
+                            }
+                        }
+                    }
+                    if (black_castle_counter > 0)
+                    {
+                        //if yes we can set kings firstmove to true
+                        foreach (ChessPiece piece in blackPieces)
+                        {
+                            if (piece.pieceLetter == 'k')
+                            {
+                                piece.firstMove = true;
                             }
                         }
                     }
@@ -487,6 +613,7 @@ public class Chessboard : MonoBehaviour
                         {
                             //set the EnPassant square
                             enPassantSquare = "" + FEN[i] + FEN[i + 1];
+                            //so we would only set the square once
                             ++enPassant_letter_count;
                         }
                     }
@@ -494,16 +621,28 @@ public class Chessboard : MonoBehaviour
                 //set the turn counter
                 if (whitespace_counter == 4)
                 {
-                    turnCounter = FEN[i];
+                    if (turncounter_string_count > 0)
+                    {
+                        int number;
+                        //converts string to int
+                        number = int.Parse("" + FEN[i]);
+                        turnCounter = (turnCounter * 10) + number;
+                    }
+                    
+                    if (turncounter_string_count == 0)
+                    {
+                        //converts string to int
+                        turnCounter = int.Parse("" + FEN[i]);
+                        ++turncounter_string_count;
+                    }
                 }
             }
-            //if we see a whitespace, means we are at the end of first section
+            //if we see a whitespace, means we are at the end of a section
             //time to move onto the next one
             if(FEN[i] == ' ')
             {
                 ++whitespace_counter;
             }
-
         }
     }
 

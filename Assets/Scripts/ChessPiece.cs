@@ -20,7 +20,7 @@ public abstract class ChessPiece : MonoBehaviour
     public bool kingAttacker;
     private void Start()
     {
-        firstMove = true;
+
     }
 
     //This is for getting all moves if there were no king restrictions
@@ -84,8 +84,7 @@ public abstract class ChessPiece : MonoBehaviour
                 if (mousepos.y > Hitbox.yMin && mousepos.y < Hitbox.yMax)
                 {
                     Highlight(0.3f);
-                    pieceHeld = true;
-                    
+                    pieceHeld = true;     
                 }
             }
 
