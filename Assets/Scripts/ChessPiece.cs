@@ -17,7 +17,6 @@ public abstract class ChessPiece : MonoBehaviour
     public bool firstMove;
 
     public int team;
-    public bool kingAttacker;
     private void Start()
     {
 
@@ -174,8 +173,6 @@ public abstract class ChessPiece : MonoBehaviour
                             currentSquare.pieceOnSquare = pieceLetter;
                             firstMove = false;
                             availableMoves.Clear();
-                            Chessboard.instance.allBlackMoves.Clear();
-                            Chessboard.instance.allWhiteMoves.Clear();
                             Chessboard.instance.turnCounter++;
 
                             Highlight(-0.3f);
@@ -279,9 +276,9 @@ public abstract class ChessPiece : MonoBehaviour
     {
         transform.localScale = new Vector2(transform.localScale.x + value, transform.localScale.y + value);
     }
-
     public void killYourself()
     {
         Destroy(gameObject);
+        Chessboard.instance.pieceKilled = true;
     }
 }

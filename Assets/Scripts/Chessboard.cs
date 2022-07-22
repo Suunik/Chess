@@ -12,8 +12,6 @@ public class Chessboard : MonoBehaviour
     //Piece array for chessboard
     public List<ChessPiece> whitePieces;
     public List<ChessPiece> blackPieces;
-    public List<Square> allWhiteMoves = null;
-    public List<Square> allBlackMoves = null;
     public Square whiteKingSquare;
     public Square blackKingSquare;
 
@@ -27,6 +25,9 @@ public class Chessboard : MonoBehaviour
     public int turnCounter = 1;
     public int previousTurnCounter = 0;
     public bool whiteTurn = true;
+    public int halfmoveClock = 0;
+    public bool pieceKilled = false;
+    private int availableMovesCount = 0;
 
     public List<Square[]> moveList = new List<Square[]>();
 
@@ -46,23 +47,26 @@ public class Chessboard : MonoBehaviour
         //Create all tile objects and assign them a value e.g. d3
         SpawnSquares();
 
-        //spawnFENPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 1");
-        spawnFENPosition("1r1qkb1r/p1p1ppp1/4bn1p/1pPp4/1n1N3P/3PB1P1/PP2PP1R/RN1QKB2 w Qk b6 17");
+        //spawnFENPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        spawnFENPosition("rnbqkbnr/8/6p1/pBppp3/3Pp2N/PP2B3/2P2PPP/RN2K2R b KQ - 8 40");
     }
-
     // Update is called once per frame
     void Update()
     {
         if (turnCounter != previousTurnCounter)
-        {
+        { 
             List<ChessPiece> pieces = (whiteTurn) ? whitePieces : blackPieces;
+            
             //clear previous moves
-            foreach(ChessPiece item in pieces)
+            foreach (ChessPiece item in pieces)
             {
                 item.availableMoves.Clear();
             }
+            availableMovesCount = 0;
             //change the turn
             whiteTurn = (turnCounter % 2 != 0) ? true : false;
+            //set halfmove counter
+            setHalfmoveCounter();
             //special move management
             processSuccessfulEnPassant();
             checkForEnPassant();
@@ -70,19 +74,37 @@ public class Chessboard : MonoBehaviour
             castleSquare.Clear();
 
             pieces = (whiteTurn) ? whitePieces : blackPieces;
-
+            
             foreach (ChessPiece item in pieces)
             {
+                //check if a pawn has reached the end
                 checkForPawnTransformation(item);
                 //Calculate availablemoves for every piece once per turn
                 item.FindAvailableMoves();
                 //After getting all unrestricted movement arrays it is now possible to restrict movements
                 item.restrictMovements();
+                //remember how many total moves there are
+                availableMovesCount = availableMovesCount + item.availableMoves.Count;
             }
             previousTurnCounter = turnCounter;
+            Debug.Log(availableMovesCount);
+            if(availableMovesCount == 0)
+            {
+                if(whiteTurn)
+                {
+                    Debug.Log("Black wins");
+                }
+                else
+                {
+                    Debug.Log("white wins");
+                }
+            }
+            if(halfmoveClock == 100)
+            {
+                Debug.Log("it's a draw");
+            }
             Debug.Log(generateFEN());
         }
-
         //Instead of calling piecemovement() in the ChessPiece class update(), having the board to all updates
         //is easier to manage
         foreach (ChessPiece item in whitePieces)
@@ -341,8 +363,17 @@ public class Chessboard : MonoBehaviour
 
         return FEN;
     }
-    //turn counter
+    //halfmove clock counter
     private string fifthFENField()
+    {
+        string FEN = "";
+
+        FEN = "" + halfmoveClock + ' ';
+
+        return FEN;
+    }
+    //turn counter
+    private string sixthFENFIeld()
     {
         string FEN = "";
 
@@ -359,6 +390,7 @@ public class Chessboard : MonoBehaviour
         FEN = FEN + thirdFENField();
         FEN = FEN + fourthFENField();
         FEN = FEN + fifthFENField();
+        FEN = FEN + sixthFENFIeld();
 
         return FEN;
     }
@@ -377,8 +409,10 @@ public class Chessboard : MonoBehaviour
         string black_king_position = null;
         //needed for fourth FEN section(EnPassant)
         int enPassant_letter_count = 0;
-        //needed for fifth FEN section(Turn counter)
-        int turncounter_string_count=0;
+        //needed for fifth FEN section(Halfmove clock)
+        int halfmove_string_count = 0;
+        //needed for sixth FEN section(Turn counter)
+        int turncounter_string_count = 0;
         //loop the whole FEN code
         for (int i = 0; i < FEN.Length; ++i)
         {
@@ -572,7 +606,6 @@ public class Chessboard : MonoBehaviour
                                 //if rook is on the left(Queenside)
                                 if (blackRook.currentSquare.ReturnSquare()[0] < black_king_position[0])
                                 {
-                                    Debug.Log("Kaka");
                                     blackRook.firstMove = true;
                                     ++black_castle_counter;
                                 }
@@ -618,17 +651,53 @@ public class Chessboard : MonoBehaviour
                         }
                     }
                 }
-                //set the turn counter
+                //set the halfmove counter
                 if (whitespace_counter == 4)
                 {
-                    if (turncounter_string_count > 0)
+                    //bybasses if its the first and second char on this section
+                    if (halfmove_string_count == 2)
+                    {
+                        int number;
+                        //converts string to int
+                        number = int.Parse("" + FEN[i]);
+                        halfmoveClock = (turnCounter * 10) + number;
+                    }
+                    //bybasses if its the first char on this section
+                    if (halfmove_string_count == 1)
+                    {
+                        int number;
+                        //converts string to int
+                        number = int.Parse("" + FEN[i]);
+                        halfmoveClock = (turnCounter * 10) + number;
+                    }
+                    
+                    if (halfmove_string_count == 0)
+                    {
+                        //converts string to int
+                        halfmoveClock = int.Parse("" + FEN[i]);
+                        ++halfmove_string_count;
+                    }
+                }
+                //set the turn counter
+                if (whitespace_counter == 5)
+                {
+                    //bybasses if its the first and second char on this section
+                    if (turncounter_string_count == 2)
                     {
                         int number;
                         //converts string to int
                         number = int.Parse("" + FEN[i]);
                         turnCounter = (turnCounter * 10) + number;
                     }
-                    
+                    //bybasses if its the first char on this section
+                    if (turncounter_string_count == 1)
+                    {
+                        int number;
+                        //converts string to int
+                        number = int.Parse("" + FEN[i]);
+                        turnCounter = (turnCounter * 10) + number;
+                    }
+
                     if (turncounter_string_count == 0)
                     {
                         //converts string to int
@@ -645,7 +714,29 @@ public class Chessboard : MonoBehaviour
             }
         }
     }
+    private void setHalfmoveCounter()
+    {
+        if (moveList.Count != 0)
+        {
+            //if it's whites turn we need to check if black pawn moved last
+            //vice versa if its blacks turn
+            char last_colored_piece_moved = (!whiteTurn) ? 'P' : 'p';
+            if (moveList[moveList.Count - 1][1].pieceOnSquare == last_colored_piece_moved)
+            {
+                halfmoveClock = 0;
+            }
 
+            else if (pieceKilled)
+            {
+                halfmoveClock = 0;
+                pieceKilled = false;
+            }
+            else
+            {
+                halfmoveClock = halfmoveClock + 1;
+            }
+        }
+    }
     //special moves
     private void checkForEnPassant()
     {
