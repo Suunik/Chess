@@ -1026,22 +1026,36 @@ public class Chessboard : MonoBehaviour
 
         string setupString = "position fen " + forsythEdwardsNotationString;
         p.StandardInput.WriteLine(setupString);
-
-        Debug.Log(setupString);
-        // Process for 5 seconds
-        string processString = "go movetime 5000";
+        
+        // Process for 500 milliseconds
+        string processString = "go movetime 500";
 
         // Process 20 deep
         // string processString = "go depth 20";
 
         p.StandardInput.WriteLine(processString);
-        Debug.Log(processString);
+        string standardOutputString = "";
+        string[] stringArray;
+        while (true)
+        {
+            //Get a single line from the log that is created by stockfish
+            standardOutputString = p.StandardOutput.ReadLine();
+            
+            /*For cmd lines that are unimportant uncomment this:*/
+            //Debug.Log(standardOutputString);
+            
+            //Split the line up
+            stringArray = standardOutputString.Split(char.Parse(" "));
 
-        string bestMoveInAlgebraicNotation = p.StandardOutput.ReadLine();
-        Debug.Log(bestMoveInAlgebraicNotation);
-        Debug.Log(p.StandardOutput.ReadLine());
-
+            //Check if the line contains "bestmove"
+            if(string.Compare(stringArray[0], "bestmove") == 0)
+            {
+                Debug.Log("best move is: " + stringArray[1]);
+                break;
+            }
+        }
         p.Close();
+        string bestMoveInAlgebraicNotation = stringArray[1];
 
         return bestMoveInAlgebraicNotation;
     }
