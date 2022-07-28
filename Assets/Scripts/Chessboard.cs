@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -26,6 +25,7 @@ public class Chessboard : MonoBehaviour
     public int previousTurnCounter = 0;
     public bool whiteTurn = true;
     public int halfmoveClock = 0;
+    public int fullMoveNumber = 1;
     public bool pieceKilled = false;
     private int availableMovesCount = 0;
 
@@ -48,7 +48,7 @@ public class Chessboard : MonoBehaviour
         SpawnSquares();
 
         //spawnFENPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-        spawnFENPosition("rnbqkbnr/8/6p1/pBppp3/3Pp2N/PP2B3/2P2PPP/RN2K2R b KQ - 8 40");
+        spawnFENPosition("rnb1kbnr/3B4/6p1/p1ppp3/3Pp2N/PP2B3/2P2PPP/RN2K2R b KQ - 0 42");
     }
     // Update is called once per frame
     void Update()
@@ -64,7 +64,10 @@ public class Chessboard : MonoBehaviour
             }
             availableMovesCount = 0;
             //change the turn
-            whiteTurn = (turnCounter % 2 != 0) ? true : false;
+            if (turnCounter != 1)
+            {
+                whiteTurn = (whiteTurn == true) ? false : true;
+            }
             //set halfmove counter
             setHalfmoveCounter();
             //special move management
@@ -87,10 +90,14 @@ public class Chessboard : MonoBehaviour
                 availableMovesCount = availableMovesCount + item.availableMoves.Count;
             }
             previousTurnCounter = turnCounter;
-            Debug.Log(availableMovesCount);
-            if(availableMovesCount == 0)
+            Debug.Log(generateFEN());
+            string best_move = GetBestMove(generateFEN());
+            Debug.Log(best_move);
+
+
+            if (availableMovesCount == 0)
             {
-                if(whiteTurn)
+                if (whiteTurn)
                 {
                     Debug.Log("Black wins");
                 }
@@ -99,11 +106,10 @@ public class Chessboard : MonoBehaviour
                     Debug.Log("white wins");
                 }
             }
-            if(halfmoveClock == 100)
+            if (halfmoveClock == 100)
             {
                 Debug.Log("it's a draw");
             }
-            Debug.Log(generateFEN());
         }
         //Instead of calling piecemovement() in the ChessPiece class update(), having the board to all updates
         //is easier to manage
@@ -135,7 +141,7 @@ public class Chessboard : MonoBehaviour
         ChessPiece whitePiece  = Instantiate(whitePiecePrefab[PiecePrefab], squares[row, column].transform.position, Quaternion.identity);
 
         whitePieces.Add(whitePiece);
-
+        
         whitePieces[whitePieces.Count - 1].currentSquare = squares[row, column];
         whitePieces[whitePieces.Count - 1].team = 1;
         whitePieces[whitePieces.Count - 1].currentSquare.team = 1;
@@ -236,11 +242,11 @@ public class Chessboard : MonoBehaviour
     private string secondFENField()
     {
         string FEN = "";
-        if (turnCounter % 2 != 0)
+        if (whiteTurn)
         {
             FEN = FEN + 'w' + ' ';
         }
-        if (turnCounter % 2 == 0)
+        else
         {
             FEN = FEN + 'b' + ' ';
         }
@@ -377,7 +383,7 @@ public class Chessboard : MonoBehaviour
     {
         string FEN = "";
 
-        FEN = "" + turnCounter;
+        FEN = "" + fullMoveNumber;
 
         return FEN;
     }
@@ -446,7 +452,10 @@ public class Chessboard : MonoBehaviour
                         if (FEN[i] == 'Q')
                             SpawnSingleWhitePiece(4, column, row);
                         if (FEN[i] == 'K')
+                        {
                             SpawnSingleWhitePiece(5, column, row);
+                            whiteKingSquare = squares[row, column];
+                        }
 
                         //next spot on the board
                         row = row + 1;
@@ -474,7 +483,10 @@ public class Chessboard : MonoBehaviour
                         if (FEN[i] == 'q')
                             SpawnSingleBlackPiece(4, column, row);
                         if (FEN[i] == 'k')
+                        {
                             SpawnSingleBlackPiece(5, column, row);
+                            blackKingSquare = squares[row, column];
+                        }
 
                         //next spot on the board
                         row = row + 1;
@@ -678,7 +690,7 @@ public class Chessboard : MonoBehaviour
                         ++halfmove_string_count;
                     }
                 }
-                //set the turn counter
+                //set the fullmove number
                 if (whitespace_counter == 5)
                 {
                     //bybasses if its the first and second char on this section
@@ -687,7 +699,7 @@ public class Chessboard : MonoBehaviour
                         int number;
                         //converts string to int
                         number = int.Parse("" + FEN[i]);
-                        turnCounter = (turnCounter * 10) + number;
+                        fullMoveNumber = (fullMoveNumber * 10) + number;
                     }
                     //bybasses if its the first char on this section
                     if (turncounter_string_count == 1)
@@ -695,13 +707,13 @@ public class Chessboard : MonoBehaviour
                         int number;
                         //converts string to int
                         number = int.Parse("" + FEN[i]);
-                        turnCounter = (turnCounter * 10) + number;
+                        fullMoveNumber = (fullMoveNumber * 10) + number;
                     }
 
                     if (turncounter_string_count == 0)
                     {
                         //converts string to int
-                        turnCounter = int.Parse("" + FEN[i]);
+                        fullMoveNumber = int.Parse("" + FEN[i]);
                         ++turncounter_string_count;
                     }
                 }
@@ -1000,5 +1012,37 @@ public class Chessboard : MonoBehaviour
                 SpawnSingleBlackPiece(4, pawn_column, pawn_row);
             }
         }
+    }
+    // vs AI
+    //function yoinked from stackoverflow
+    string GetBestMove(string forsythEdwardsNotationString)
+    {
+        var p = new System.Diagnostics.Process();
+        p.StartInfo.FileName = "Stockfish";
+        p.StartInfo.UseShellExecute = false;
+        p.StartInfo.RedirectStandardInput = true;
+        p.StartInfo.RedirectStandardOutput = true;
+        p.Start();
+
+        string setupString = "position fen " + forsythEdwardsNotationString;
+        p.StandardInput.WriteLine(setupString);
+
+        Debug.Log(setupString);
+        // Process for 5 seconds
+        string processString = "go movetime 5000";
+
+        // Process 20 deep
+        // string processString = "go depth 20";
+
+        p.StandardInput.WriteLine(processString);
+        Debug.Log(processString);
+
+        string bestMoveInAlgebraicNotation = p.StandardOutput.ReadLine();
+        Debug.Log(bestMoveInAlgebraicNotation);
+        Debug.Log(p.StandardOutput.ReadLine());
+
+        p.Close();
+
+        return bestMoveInAlgebraicNotation;
     }
 }

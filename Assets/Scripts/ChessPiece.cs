@@ -174,6 +174,10 @@ public abstract class ChessPiece : MonoBehaviour
                             firstMove = false;
                             availableMoves.Clear();
                             Chessboard.instance.turnCounter++;
+                            if(team == -1)
+                            {
+                                ++Chessboard.instance.fullMoveNumber;
+                            }
 
                             Highlight(-0.3f);
                             break;
