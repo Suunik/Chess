@@ -305,23 +305,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   whitePieces: []
-  blackPieces:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  blackPieces: []
   allWhiteMoves: []
   allBlackMoves: []
   whiteKingSquare: {fileID: 0}
