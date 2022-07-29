@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -37,7 +38,7 @@ public class Chessboard : MonoBehaviour
     public bool enPassantForFEN;
     //Castling
     public List<string> castleSquare = new List<string>();
-
+    System.Diagnostics.Process stockfishProcess = new System.Diagnostics.Process();
 
     // Start is called before the first frame update
     void Start()
@@ -47,9 +48,14 @@ public class Chessboard : MonoBehaviour
         //Create all tile objects and assign them a value e.g. d3
         SpawnSquares();
 
-        spawnFENPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        string startpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        spawnFENPosition(startpos);
         //spawnFENPosition("rnb1kbnr/3B4/6p1/p1ppp3/3Pp2N/PP2B3/2P2PPP/RN2K2R b KQ - 0 42");
+
+        //Open stockfish
+        stockfishProcess = openStockfish(startpos);
     }
+
     // Update is called once per frame
     void Update()
     {
@@ -107,7 +113,7 @@ public class Chessboard : MonoBehaviour
                 Debug.Log("it's a draw");
             }
             Debug.Log(generateFEN());
-            string best_move = GetBestMove(generateFEN());
+            string best_move = GetBestMove(ref stockfishProcess, generateFEN());
             Debug.Log(best_move);
 
             algebraicNotationMovePiece(best_move);
@@ -1015,8 +1021,21 @@ public class Chessboard : MonoBehaviour
         }
     }
     // vs AI
+
+    private System.Diagnostics.Process openStockfish(string startpos)
+    {
+        var p = new System.Diagnostics.Process();
+        p.StartInfo.FileName = "Stockfish";
+        p.StartInfo.UseShellExecute = false;
+        p.StartInfo.RedirectStandardInput = true;
+        p.StartInfo.RedirectStandardOutput = true;
+        p.StartInfo.CreateNoWindow = true;
+        p.Start();
+        return p;
+    }
+
     //function yoinked from stackoverflow
-    string GetBestMove(string forsythEdwardsNotationString)
+    string GetBestMove(ref System.Diagnostics.Process stockfishProcess, string forsythEdwardsNotationString)
     {
         var p = new System.Diagnostics.Process();
         p.StartInfo.FileName = "Stockfish";
@@ -1063,7 +1082,7 @@ public class Chessboard : MonoBehaviour
     }
     void algebraicNotationMovePiece(string an)
     {
-        //check if lenght of the string is correct (must be 4)
+        //check if length of the string is correct (must be 4)
         if(an.Length < 4 || an.Length > 4)
         {
             Debug.Log("returning");
@@ -1114,5 +1133,12 @@ public class Chessboard : MonoBehaviour
                 }
             }
         }
+    }
+
+    //Close the engine (and possibly other stuff) on exit
+    void OnApplicationQuit()
+    {
+        Debug.Log("Application closing...");
+        stockfishProcess.Close();
     }
 }
