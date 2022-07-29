@@ -47,8 +47,8 @@ public class Chessboard : MonoBehaviour
         //Create all tile objects and assign them a value e.g. d3
         SpawnSquares();
 
-        //spawnFENPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-        spawnFENPosition("rnb1kbnr/3B4/6p1/p1ppp3/3Pp2N/PP2B3/2P2PPP/RN2K2R b KQ - 0 42");
+        spawnFENPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        //spawnFENPosition("rnb1kbnr/3B4/6p1/p1ppp3/3Pp2N/PP2B3/2P2PPP/RN2K2R b KQ - 0 42");
     }
     // Update is called once per frame
     void Update()
@@ -90,11 +90,7 @@ public class Chessboard : MonoBehaviour
                 availableMovesCount = availableMovesCount + item.availableMoves.Count;
             }
             previousTurnCounter = turnCounter;
-            Debug.Log(generateFEN());
-            string best_move = GetBestMove(generateFEN());
-            Debug.Log(best_move);
-
-
+            
             if (availableMovesCount == 0)
             {
                 if (whiteTurn)
@@ -110,6 +106,11 @@ public class Chessboard : MonoBehaviour
             {
                 Debug.Log("it's a draw");
             }
+            Debug.Log(generateFEN());
+            string best_move = GetBestMove(generateFEN());
+            Debug.Log(best_move);
+
+            algebraicNotationMovePiece(best_move);
         }
         //Instead of calling piecemovement() in the ChessPiece class update(), having the board to all updates
         //is easier to manage
@@ -1022,6 +1023,7 @@ public class Chessboard : MonoBehaviour
         p.StartInfo.UseShellExecute = false;
         p.StartInfo.RedirectStandardInput = true;
         p.StartInfo.RedirectStandardOutput = true;
+        p.StartInfo.CreateNoWindow = true;
         p.Start();
 
         string setupString = "position fen " + forsythEdwardsNotationString;
@@ -1058,5 +1060,59 @@ public class Chessboard : MonoBehaviour
         string bestMoveInAlgebraicNotation = stringArray[1];
 
         return bestMoveInAlgebraicNotation;
+    }
+    void algebraicNotationMovePiece(string an)
+    {
+        //check if lenght of the string is correct (must be 4)
+        if(an.Length < 4 || an.Length > 4)
+        {
+            Debug.Log("returning");
+            return;
+        }
+
+        // only need to find a piece that can actually move this turn
+        List<ChessPiece> moving_pieces = (whiteTurn) ? whitePieces : blackPieces;
+        //Defending pieces
+        List<ChessPiece> defending_pieces = (whiteTurn) ? blackPieces : whitePieces;
+        //square that the piece must be on
+        Square current_square = squares[an[0] - 97, an[1] - 49];
+        //square that the piece must move to
+        Square target_square = squares[an[2] - 97,an[3] - 49];
+
+        Debug.Log("current square: " + current_square);
+        Debug.Log("target square: " + target_square);
+
+        //find a piece that is on a square that matches current_square
+        foreach(ChessPiece piece in moving_pieces)
+        {
+            if(piece.currentSquare == current_square)
+            {
+                Debug.Log("we must move " + piece);
+                //all the neccesary things to move a piece
+                moveList.Add(new Square[] { current_square, target_square });
+                current_square.team = 0;
+                current_square.pieceOnSquare = '0';
+                foreach (ChessPiece defending_piece in defending_pieces)
+                {
+                    if(defending_piece.currentSquare == target_square)
+                    {
+                        defending_piece.killYourself();
+                        defending_pieces.Remove(defending_piece);
+                        break;
+                    }
+                }
+                //move the piece we found to the target_square
+                piece.transform.position = target_square.transform.position;
+                piece.currentSquare = target_square;
+                target_square.team = piece.team;
+                target_square.pieceOnSquare = piece.pieceLetter;
+                piece.firstMove = false;
+                turnCounter++;
+                if(piece.team == -1)
+                {
+                    fullMoveNumber++;
+                }
+            }
+        }
     }
 }

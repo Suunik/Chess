@@ -172,7 +172,6 @@ public abstract class ChessPiece : MonoBehaviour
                             //assign piece to a new square
                             currentSquare.pieceOnSquare = pieceLetter;
                             firstMove = false;
-                            availableMoves.Clear();
                             Chessboard.instance.turnCounter++;
                             if(team == -1)
                             {
