@@ -29,6 +29,9 @@ public class Chessboard : MonoBehaviour
     public int fullMoveNumber = 1;
     public bool pieceKilled = false;
     private int availableMovesCount = 0;
+    //Game mode options
+    private int gameMode;
+    private char playerColor;
 
     public List<Square[]> moveList = new List<Square[]>();
 
@@ -45,30 +48,38 @@ public class Chessboard : MonoBehaviour
     {
         instance = this;
 
+        //Set gameMode options
+        gameMode = GameController.gameMode;
+        playerColor = GameController.selectedPlayerColor;
+
         //Create all tile objects and assign them a value e.g. d3
         SpawnSquares();
 
         string startpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         spawnFENPosition(startpos);
-        //spawnFENPosition("rnb1kbnr/3B4/6p1/p1ppp3/3Pp2N/PP2B3/2P2PPP/RN2K2R b KQ - 0 42");
-
-        //Open stockfish
-        stockfishProcess = openStockfish(startpos);
+        if (gameMode == 2)
+        {
+            //Open stockfish
+            stockfishProcess = openStockfish(startpos);
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
         if (turnCounter != previousTurnCounter)
-        { 
-            List<ChessPiece> pieces = (whiteTurn) ? whitePieces : blackPieces;
-            
-            //clear previous moves
-            foreach (ChessPiece item in pieces)
+        {
+            //player vs AI
+            if (gameMode == 1)
             {
-                item.availableMoves.Clear();
+                Debug.Log("Playing playerVsAi");
+                playerVsAi(playerColor);
             }
-            availableMovesCount = 0;
+            //AI vs AI
+            if(gameMode == 2)
+            {
+                aIvsAI();
+            }
             //change the turn
             if (turnCounter != 1)
             {
@@ -81,42 +92,6 @@ public class Chessboard : MonoBehaviour
             checkForEnPassant();
             processSuccessfulCastle();
             castleSquare.Clear();
-
-            pieces = (whiteTurn) ? whitePieces : blackPieces;
-            
-            foreach (ChessPiece item in pieces)
-            {
-                //check if a pawn has reached the end
-                checkForPawnTransformation(item);
-                //Calculate availablemoves for every piece once per turn
-                item.FindAvailableMoves();
-                //After getting all unrestricted movement arrays it is now possible to restrict movements
-                item.restrictMovements();
-                //remember how many total moves there are
-                availableMovesCount = availableMovesCount + item.availableMoves.Count;
-            }
-            previousTurnCounter = turnCounter;
-            
-            if (availableMovesCount == 0)
-            {
-                if (whiteTurn)
-                {
-                    Debug.Log("Black wins");
-                }
-                else
-                {
-                    Debug.Log("white wins");
-                }
-            }
-            if (halfmoveClock == 100)
-            {
-                Debug.Log("it's a draw");
-            }
-            Debug.Log(generateFEN());
-            string best_move = GetBestMove(ref stockfishProcess, generateFEN());
-            Debug.Log(best_move);
-
-            algebraicNotationMovePiece(best_move);
         }
         //Instead of calling piecemovement() in the ChessPiece class update(), having the board to all updates
         //is easier to manage
@@ -128,7 +103,6 @@ public class Chessboard : MonoBehaviour
         {
             item.PieceMovement();
         }
-
     }
     private void SpawnSquares()
     {
@@ -1021,7 +995,6 @@ public class Chessboard : MonoBehaviour
         }
     }
     // vs AI
-
     private System.Diagnostics.Process openStockfish(string startpos)
     {
         var p = new System.Diagnostics.Process();
@@ -1037,30 +1010,23 @@ public class Chessboard : MonoBehaviour
     //function yoinked from stackoverflow
     string GetBestMove(ref System.Diagnostics.Process stockfishProcess, string forsythEdwardsNotationString)
     {
-        var p = new System.Diagnostics.Process();
-        p.StartInfo.FileName = "Stockfish";
-        p.StartInfo.UseShellExecute = false;
-        p.StartInfo.RedirectStandardInput = true;
-        p.StartInfo.RedirectStandardOutput = true;
-        p.StartInfo.CreateNoWindow = true;
-        p.Start();
-
         string setupString = "position fen " + forsythEdwardsNotationString;
-        p.StandardInput.WriteLine(setupString);
-        
+        stockfishProcess.StandardInput.WriteLine(setupString);
+
+        Debug.Log("analysing " + forsythEdwardsNotationString);
         // Process for 500 milliseconds
         string processString = "go movetime 500";
 
         // Process 20 deep
         // string processString = "go depth 20";
 
-        p.StandardInput.WriteLine(processString);
+        stockfishProcess.StandardInput.WriteLine(processString);
         string standardOutputString = "";
         string[] stringArray;
         while (true)
         {
             //Get a single line from the log that is created by stockfish
-            standardOutputString = p.StandardOutput.ReadLine();
+            standardOutputString = stockfishProcess.StandardOutput.ReadLine();
             
             /*For cmd lines that are unimportant uncomment this:*/
             //Debug.Log(standardOutputString);
@@ -1075,20 +1041,16 @@ public class Chessboard : MonoBehaviour
                 break;
             }
         }
-        p.Close();
         string bestMoveInAlgebraicNotation = stringArray[1];
 
         return bestMoveInAlgebraicNotation;
     }
     void algebraicNotationMovePiece(string an)
     {
-        //check if length of the string is correct (must be 4)
-        if(an.Length < 4 || an.Length > 4)
+        if(an == "(none)")
         {
-            Debug.Log("returning");
             return;
         }
-
         // only need to find a piece that can actually move this turn
         List<ChessPiece> moving_pieces = (whiteTurn) ? whitePieces : blackPieces;
         //Defending pieces
@@ -1098,15 +1060,11 @@ public class Chessboard : MonoBehaviour
         //square that the piece must move to
         Square target_square = squares[an[2] - 97,an[3] - 49];
 
-        Debug.Log("current square: " + current_square);
-        Debug.Log("target square: " + target_square);
-
         //find a piece that is on a square that matches current_square
         foreach(ChessPiece piece in moving_pieces)
         {
             if(piece.currentSquare == current_square)
             {
-                Debug.Log("we must move " + piece);
                 //all the neccesary things to move a piece
                 moveList.Add(new Square[] { current_square, target_square });
                 current_square.team = 0;
@@ -1135,6 +1093,59 @@ public class Chessboard : MonoBehaviour
         }
     }
 
+    //Game modes
+    void playerVsAi(char playerColor)
+    {
+        List<ChessPiece> pieces = (whiteTurn) ? whitePieces : blackPieces;
+
+        //clear previous moves
+        foreach (ChessPiece item in pieces)
+        {
+            item.availableMoves.Clear();
+        }
+        availableMovesCount = 0;
+        //change active pieces
+        pieces = (whiteTurn) ? whitePieces : blackPieces;
+
+        foreach (ChessPiece item in pieces)
+        {
+            //check if a pawn has reached the end
+            checkForPawnTransformation(item);
+            //Calculate availablemoves for every piece once per turn
+            item.FindAvailableMoves();
+            //After getting all unrestricted movement arrays it is now possible to restrict movements
+            item.restrictMovements();
+            //remember how many total moves there are
+            availableMovesCount = availableMovesCount + item.availableMoves.Count;
+        }
+        Debug.Log(generateFEN());
+        previousTurnCounter = turnCounter;
+
+        if (playerColor == 'w' && !whiteTurn)
+        {
+            string best_move = GetBestMove(ref stockfishProcess, generateFEN());
+            algebraicNotationMovePiece(best_move);
+        }
+        if(playerColor == 'b' && whiteTurn)
+        {
+            string best_move = GetBestMove(ref stockfishProcess, generateFEN());
+            algebraicNotationMovePiece(best_move);
+        }
+    }
+    void aIvsAI()
+    {
+        List<ChessPiece> pieces = (whiteTurn) ? whitePieces : blackPieces;
+        //check if any pawn has made it to the end
+        foreach(ChessPiece item in pieces)
+        {
+            checkForPawnTransformation(item);
+        }
+        //get the best move
+        string best_move = GetBestMove(ref stockfishProcess, generateFEN());
+        //move pieces according to the best move
+        algebraicNotationMovePiece(best_move);
+
+    }
     //Close the engine (and possibly other stuff) on exit
     void OnApplicationQuit()
     {
