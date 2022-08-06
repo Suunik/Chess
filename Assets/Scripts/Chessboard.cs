@@ -57,11 +57,9 @@ public class Chessboard : MonoBehaviour
 
         string startpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         spawnFENPosition(startpos);
-        if (gameMode == 2)
-        {
-            //Open stockfish
-            stockfishProcess = openStockfish(startpos);
-        }
+
+        //Open stockfish
+        stockfishProcess = openStockfish(startpos);
     }
 
     // Update is called once per frame
@@ -69,6 +67,18 @@ public class Chessboard : MonoBehaviour
     {
         if (turnCounter != previousTurnCounter)
         {
+            //change the turn
+            if (turnCounter > 1)
+            {
+                whiteTurn = (whiteTurn == true) ? false : true;
+            }
+            //set halfmove counter
+            setHalfmoveCounter();
+            //special move management
+            processSuccessfulEnPassant();
+            checkForEnPassant();
+            processSuccessfulCastle();
+            castleSquare.Clear();
             //player vs AI
             if (gameMode == 1)
             {
@@ -80,18 +90,6 @@ public class Chessboard : MonoBehaviour
             {
                 aIvsAI();
             }
-            //change the turn
-            if (turnCounter != 1)
-            {
-                whiteTurn = (whiteTurn == true) ? false : true;
-            }
-            //set halfmove counter
-            setHalfmoveCounter();
-            //special move management
-            processSuccessfulEnPassant();
-            checkForEnPassant();
-            processSuccessfulCastle();
-            castleSquare.Clear();
         }
         //Instead of calling piecemovement() in the ChessPiece class update(), having the board to all updates
         //is easier to manage
@@ -1096,7 +1094,7 @@ public class Chessboard : MonoBehaviour
     //Game modes
     void playerVsAi(char playerColor)
     {
-        List<ChessPiece> pieces = (whiteTurn) ? whitePieces : blackPieces;
+        List<ChessPiece> pieces = (whiteTurn) ? blackPieces : whitePieces;
 
         //clear previous moves
         foreach (ChessPiece item in pieces)
@@ -1121,9 +1119,12 @@ public class Chessboard : MonoBehaviour
         Debug.Log(generateFEN());
         previousTurnCounter = turnCounter;
 
+        Debug.Log("player color: " + playerColor);
+
         if (playerColor == 'w' && !whiteTurn)
         {
             string best_move = GetBestMove(ref stockfishProcess, generateFEN());
+            Debug.Log("Best move for black is: " + best_move);
             algebraicNotationMovePiece(best_move);
         }
         if(playerColor == 'b' && whiteTurn)
